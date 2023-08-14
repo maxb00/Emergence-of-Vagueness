@@ -192,7 +192,7 @@ class SignalingGame:
   
 
 def main():
-  game = SignalingGame(18, 3, 18, (1,0.3), null_signal=True)
+  game = SignalingGame(12, 2, 12, (1,0.5), null_signal=True)
   game(3000, 25)
 
 if __name__ == '__main__':
