@@ -61,6 +61,8 @@ class SignalingGame:
 
     self.reward_fn = linear_reward_fn(reward_param, null_signal)
 
+    self.null_signal = null_signal
+
     self.random = np.random.default_rng(0) # default seed = 0. Can be changed with set_random_seed()
 
     self.sender = Sender(self.num_states, self.num_signals, self, null_signal)
@@ -146,7 +148,7 @@ class SignalingGame:
     images = []
     for filename in [f"./images/game_{(j+1)*record_interval}.png" for j in range(num_images)]:
       images.append(imageio.imread(filename))
-    imageio.mimsave("test.gif", images, duration=duration)
+    imageio.mimsave(f"{self.num_states}_{self.num_signals}_{self.num_actions}{'_null' if self.null_signal else ''}.gif", images, duration=duration)
     display(HTML('<img src="test.gif">'))
   
   def __call__(self, num_iter: int, record_interval=-1):
