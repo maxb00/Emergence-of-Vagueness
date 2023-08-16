@@ -59,6 +59,8 @@ class SignalingGame:
     self.num_signals = num_signals
     self.num_actions = num_actions
 
+    self.reward_param = reward_param
+
     self.reward_fn = linear_reward_fn(reward_param, null_signal)
 
     self.null_signal = null_signal
@@ -93,6 +95,31 @@ class SignalingGame:
       float: the reward based on the state and the action
     """
     return self.reward_fn(state, action)
+  
+  def expected_payoff(self, signal_prob, action_prob) -> float:
+    """Calculates the expected payoff given the probabilities of the Sender and the Receiver
+    
+    Args:
+      signal_prob (np.ndarray): signal probabilities
+      action_prob (np.ndarray): action probabilities
+
+    Returns:
+      float: the expected payoff
+    """
+    ep = 0
+    for w in range(self.num_states):
+      epw = 0
+      for m in range(self.num_signals + (1 if self.null_signal else 0)):
+        eps = 0
+        for a in range(self.num_actions):
+          if not self.null_signal or m != self.num_signals:
+            eps += action_prob[m, a] * self.evaluate(w, a)
+
+        epw += signal_prob[m, w] * eps
+
+      ep += epw
+
+    return ep / self.num_states
 
   def gen_state(self) -> int:
     """Generates a random (world) state
@@ -113,7 +140,7 @@ class SignalingGame:
                          "action": self.curr_action,
                          "reward": reward})
     
-  def gen_gif(self, num_images: int, record_interval: int, duration: int):
+  def gen_gif(self, num_iter: int, record_interval: int, duration: int):
     """Generates a heatmap gif of the whole simulation and saves it into 
     test.gif
 
@@ -122,12 +149,20 @@ class SignalingGame:
       record_interval (int): number of simulations between each image
       duration (int): the duration an image is shown in the gif
     """
+    num_images = num_iter // record_interval
+
     if not os.path.exists("./images"):
       os.mkdir("images")
 
+    epx = []
+    epy = []
+
     for i in range(num_images):
-      fig, axs = plt.subplots(2, 1, figsize=(8, 6))
+      fig, axs = plt.subplots(3, 1, figsize=(8, 6))
       plt.tight_layout(pad=3)
+
+      epx.append((i+1)*record_interval)
+      epy.append(self.expected_payoff(self.sender.signal_history[i], self.receiver.action_history[i]))
 
       sns.heatmap(self.sender.signal_history[i], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, 
       fmt=".1f", ax=axs[0])
@@ -141,6 +176,11 @@ class SignalingGame:
       axs[1].set_ylabel("messages")
       axs[1].set_title("Receiver\'s weights")
 
+      axs[2].plot(epx, epy)
+      axs[2].set_xlabel("rollout")
+      axs[2].set_ylabel("expected payoff")
+      axs[2].set_title("Expected payoff by rollout")
+
       fig.suptitle(f"Rollout {(i+1)*record_interval}")
       plt.savefig(f"./images/game_{(i+1)*record_interval}.png")
       plt.close(fig)
@@ -148,7 +188,7 @@ class SignalingGame:
     images = []
     for filename in [f"./images/game_{(j+1)*record_interval}.png" for j in range(num_images)]:
       images.append(imageio.imread(filename))
-    imageio.mimsave(f"{self.num_states}_{self.num_signals}_{self.num_actions}{'_null' if self.null_signal else ''}.gif", images, duration=duration)
+    imageio.mimsave(f"{self.num_states}_{self.num_signals}_{self.num_actions}_{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif", images, duration=duration)
     display(HTML('<img src="test.gif">'))
   
   def __call__(self, num_iter: int, record_interval=-1):
@@ -176,24 +216,24 @@ class SignalingGame:
       self.sender.update(self.history[-1])
       self.receiver.update(self.history[-1])
 
-      if i == num_iter - 1:
-        print("Signal weights & probs:")
-        print(self.sender.signal_weights)
-        self.sender.print_signal_prob()
-        print("Action weights & probs:")
-        print(self.receiver.action_weights)
-        self.receiver.print_action_prob()
-
+      # if i == num_iter - 1:
+      #   print(f"game={self.history[-1]}")
+      #   print("Signal weights & probs:")
+      #   print(self.sender.signal_weights)
+      #   self.sender.print_signal_prob()
+      #   print("Action weights & probs:")
+      #   print(self.receiver.action_weights)
+      #   self.receiver.print_action_prob()
 
     if record_interval == -1:
       return
     
-    self.gen_gif(num_iter // record_interval, record_interval, 100)
+    self.gen_gif(num_iter, record_interval, 100)
   
 
 def main():
-  game = SignalingGame(12, 2, 12, (1,0.5), null_signal=True)
-  game(3000, 25)
+  game = SignalingGame(20, 2, 20, (2,0.5), null_signal=True)
+  game(2000, 25)
 
 if __name__ == '__main__':
   main()
