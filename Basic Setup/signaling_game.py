@@ -188,7 +188,7 @@ class SignalingGame:
     images = []
     for filename in [f"./images/game_{(j+1)*record_interval}.png" for j in range(num_images)]:
       images.append(imageio.imread(filename))
-    imageio.mimsave(f"{self.num_states}_{self.num_signals}_{self.num_actions}_{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif", images, duration=duration)
+    imageio.mimsave(f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}_{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif", images, duration=duration)
     display(HTML('<img src="test.gif">'))
   
   def __call__(self, num_iter: int, record_interval=-1):
@@ -232,8 +232,8 @@ class SignalingGame:
   
 
 def main():
-  game = SignalingGame(20, 2, 20, (2,0.5), null_signal=True)
-  game(2000, 25)
+  game = SignalingGame(20, 3, 20, (1.5,0.5), null_signal=True)
+  game(25, 25)
 
 if __name__ == '__main__':
   main()
