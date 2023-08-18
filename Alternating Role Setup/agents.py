@@ -49,7 +49,9 @@ class Agent:
     self.null_signal = null_signal
 
     self.signal_weights = np.zeros((self.num_signals, num_states))
-    self.action_weights = np.zeros((self.num_signals, num_actions))
+    self.action_weights = np.zeros(
+      (self.num_signals - (1 if null_signal else 0), 
+      num_actions))
 
     self.signal_history = []
     self.action_history = []
@@ -107,6 +109,8 @@ class Agent:
       curr_game (dict): information about the current game
     """
     state, signal = curr_game["state"], curr_game["signal"]
+    if signal == -1:
+      return
     reward = curr_game["reward"]
     self.signal_weights[signal, state] += reward
 
@@ -143,6 +147,8 @@ class Agent:
       curr_game (dict): information about the current game
     """
     signal, action = curr_game["signal"], curr_game["action"]
+    if signal == -1:
+      return
     reward = curr_game["reward"]
     self.action_weights[signal, action] += reward
 
@@ -191,14 +197,14 @@ class Agent:
   def print_action_prob(self):
     """Prints the current action probabilities"""
     prob = np.zeros_like(self.action_weights)
-    for i in range(self.num_signals):
+    for i in range(self.num_signals - (1 if self.null_signal else 0)):
       prob[i, :] = norm(self.action_weights[i, :])
 
     print('m|a', end=' ')
     for i in range(self.num_actions):
       print(f'{i:3}', end=' ')
     print()
-    for i in range(self.num_signals):
+    for i in range(self.num_signals - (1 if self.null_signal else 0)):
       print(f'{i:3}', end=' ')
       for j in range(self.num_actions):
         print(f'{int(prob[i, j]):3}', end=' ')
