@@ -25,9 +25,7 @@ class Sender:
     num_states, num_signals (int): the number of (world) states, signals
     game (SignalingGame): the signaling game
     null_signal (boolean): indicates the use of null signals
-    signal_weights (np.ndarray): the signal weights
-    signal_history (list): history of probability matrix for
-      signals
+    signal_weights (np.ndarray): the signal weights (unused)
   """
   def __init__(self, num_states: int, num_signals: int, 
                game, null_signal=False):
@@ -119,8 +117,7 @@ class Receiver:
     num_signals, num_actions (int): the number of signals, actions
     game (Signaling Game): the signaling game
     action_weights (np.ndarray): the action weights
-    action_history (list): history of probability matrix for
-      actions
+    action_history (list): the action probabilities history
   """
   def __init__(self, num_signals: int, num_actions: int, game):
     """Initializes the instances to set up a receiver

@@ -144,7 +144,7 @@ class SignalingGame:
     
   def gen_gif(self, num_iter: int, record_interval: int, duration: int):
     """Generates a heatmap gif of the whole simulation and saves it into 
-    test.gif
+    a GIF file
 
     Args:
       num_images (int): the number of images in the gif
@@ -240,24 +240,24 @@ class SignalingGame:
         self.sender.sender_update(self.history[-1])
         self.receiver.receiver_update(self.history[-1])
 
-        if i == num_iter - 1 and j == 1:
-          print(f"game={self.history[-1]}")
-          print("Agent 1's weights:")
-          print("Signal weights & probs:")
-          print(self.sender.signal_weights)
-          self.sender.print_signal_prob()
-          print("Action weights & probs:")
-          print(self.sender.action_weights)
-          self.sender.print_action_prob()
-          print()
-          print("Agent 2's weights:")
-          print("Signal weights & probs:")
-          print(self.receiver.signal_weights)
-          self.receiver.print_signal_prob()
-          print("Action weights & probs:")
-          print(self.receiver.action_weights)
-          self.receiver.print_action_prob()
-          print()
+        # if i == num_iter - 1 and j == 1:
+        #   print(f"game={self.history[-1]}")
+        #   print("Agent 1's weights:")
+        #   print("Signal weights & probs:")
+        #   print(self.sender.signal_weights)
+        #   self.sender.print_signal_prob()
+        #   print("Action weights & probs:")
+        #   print(self.sender.action_weights)
+        #   self.sender.print_action_prob()
+        #   print()
+        #   print("Agent 2's weights:")
+        #   print("Signal weights & probs:")
+        #   print(self.receiver.signal_weights)
+        #   self.receiver.print_signal_prob()
+        #   print("Action weights & probs:")
+        #   print(self.receiver.action_weights)
+        #   self.receiver.print_action_prob()
+        #   print()
 
         self.sender, self.receiver = self.receiver, self.sender
 
@@ -266,10 +266,3 @@ class SignalingGame:
     
     self.gen_gif(num_iter, record_interval, 100)
   
-
-def main():
-  game = SignalingGame(20, 3, 20, (0.5,0.5), null_signal=False)
-  game(2000, 25)
-
-if __name__ == '__main__':
-  main()
