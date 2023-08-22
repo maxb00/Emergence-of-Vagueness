@@ -35,7 +35,9 @@ class SignalingGame:
   Attributes:
     num_states, num_signals, num_actions (int): the number of (world) states,
       signals, and actions
+    reward_param (tuple[float, float]): the reward parameters
     reward_fn (function): the reward function
+    null_signal (boolean): null signal case
     random (np.random.Generator): the random generator for the states
     receiver (Receiver): the receiver
     sender (Sender): the sender
@@ -230,10 +232,3 @@ class SignalingGame:
     
     self.gen_gif(num_iter, record_interval, 100)
   
-
-def main():
-  game = SignalingGame(20, 3, 20, (1.5,0.5), null_signal=True)
-  game(25, 25)
-
-if __name__ == '__main__':
-  main()
