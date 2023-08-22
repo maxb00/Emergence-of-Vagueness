@@ -26,18 +26,23 @@ def get_args():
 def main():
   (nstates, nsignals, nactions, rp1, rp2, null, niter, record) = get_args()
 
-  senders = [Sender(nstates, nsignals, null) for _ in range(5)]
-  receivers = [Receiver(nsignals, nactions) for _ in range(5)]
+  network_size = 5 # to update
 
-  for i in range(niter):
+  senders = [Sender(nstates, nsignals, null) for _ in range(network_size)]
+  receivers = [Receiver(nsignals, nactions) for _ in range(network_size)]
+
+  game = SignalingGame(nstates, nsignals, nactions, 
+                       (rp1, rp2), null_signal=null)
+
+  for iter in range(niter):
     random_senders = np.random.permutation(senders)
     random_receivers = np.random.permutation(receivers)
 
-    for _ in range(5):
-      game
-  game = SignalingGame(nstates, nsignals, nactions, 
-                       (rp1, rp2), null_signal=null)
-  game(niter, record)
+    for i in range(5):
+      if record > 0 and (iter+1) % record == 0:
+        game(random_senders[i], random_receivers[i], 1, 1)
+      else:
+        game(random_senders[i], random_receivers[i], 1)
 
 if __name__ == '__main__':
   main()

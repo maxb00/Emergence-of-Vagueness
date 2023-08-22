@@ -53,6 +53,8 @@ class Agent:
     self.signal_history = []
     self.action_history = []
 
+    self.positive_reward = 1 # to update
+
   def gen_signal(self, state: int, record=False) -> int:
     """Generates a signal based on the state (hard-coded for now)
     
@@ -123,7 +125,7 @@ class Agent:
       if l >= 0:
         self.signal_weights[signal, l] += stimgen_reward
 
-    reward = 1
+    reward = self.positive_reward
     self.action_weights[signal, state] += reward
     l = r = state
     for i in range(1,4):
@@ -161,7 +163,7 @@ class Agent:
       if l >= 0:
         self.action_weights[signal, l] += stimgen_reward
 
-    reward = 1
+    reward = self.positive_reward
     self.signal_weights[signal, action] += reward
     l = r = action
     for i in range(1,4):
