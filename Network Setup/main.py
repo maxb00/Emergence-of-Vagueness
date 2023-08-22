@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+import numpy as np
 from signaling_game import SignalingGame
 from agents import Sender, Receiver
 
@@ -28,6 +29,12 @@ def main():
   senders = [Sender(nstates, nsignals, null) for _ in range(5)]
   receivers = [Receiver(nsignals, nactions) for _ in range(5)]
 
+  for i in range(niter):
+    random_senders = np.random.permutation(senders)
+    random_receivers = np.random.permutation(receivers)
+
+    for _ in range(5):
+      game
   game = SignalingGame(nstates, nsignals, nactions, 
                        (rp1, rp2), null_signal=null)
   game(niter, record)
