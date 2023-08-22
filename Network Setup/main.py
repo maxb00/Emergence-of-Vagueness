@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from signaling_game import SignalingGame
+from agents import Sender, Receiver
 
 def get_parser():
   parser = ArgumentParser()

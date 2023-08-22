@@ -24,27 +24,24 @@ class Agent:
   Attributes:
     num_states, num_signals, num_actions (int): the number of (world) states,
       signals, and actions
-    game (SignalingGame): the signaling game
     null_signal (boolean): indicates the use of null signals
     signal_weights, action_weights (np.ndarray): the signal/action weights
     signal_history, action_history (list): history of probability matrix for
       signals/actions
   """
   def __init__(self, num_states: int, num_signals: int, 
-               num_actions: int, game, null_signal=False):
+               num_actions: int, null_signal=False):
     """Initializes the instances to set up an agent
     
     Args:
       num_states (int): the number of (world) states
       num_signals (int): the number of signals
       num_action (int): the number of actions
-      game (SignalingGame): the signaling game
       null_signal (boolean): indicates the use of null signals
     """
     self.num_states = num_states
     self.num_signals = num_signals + (1 if null_signal else 0)
     self.num_actions = num_actions
-    self.game = game
 
     self.null_signal = null_signal
 

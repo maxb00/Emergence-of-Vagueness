@@ -23,25 +23,21 @@ class Sender:
 
   Attributes:
     num_states, num_signals (int): the number of (world) states, signals
-    game (SignalingGame): the signaling game
     null_signal (boolean): indicates the use of null signals
     signal_weights (np.ndarray): the signal weights
     signal_history (list): history of probability matrix for
       signals
   """
-  def __init__(self, num_states: int, num_signals: int, 
-               game, null_signal=False):
+  def __init__(self, num_states: int, num_signals: int, null_signal=False):
     """Initializes the instances to set up a sender
     
     Args:
       num_states (int): the number of (world) states
       num_signals (int): the number of signals
-      game (SignalingGame): the signaling game
       null_signal (boolean): indicates the use of null signals
     """
     self.num_states = num_states
     self.num_signals = num_signals + (1 if null_signal else 0)
-    self.game = game
 
     self.null_signal = null_signal
 
@@ -117,22 +113,19 @@ class Receiver:
 
   Attributes:
     num_signals, num_actions (int): the number of signals, actions
-    game (Signaling Game): the signaling game
     action_weights (np.ndarray): the action weights
     action_history (list): history of probability matrix for
       actions
   """
-  def __init__(self, num_signals: int, num_actions: int, game):
+  def __init__(self, num_signals: int, num_actions: int):
     """Initializes the instances to set up a receiver
 
     Args:
       num_signals (int): the number of signals
       num_action (int): the number of actions
-      game (SignalingGame): the signaling game
     """
     self.num_signals = num_signals
     self.num_actions = num_actions
-    self.game = game
 
     self.action_weights = np.zeros((num_signals, num_actions))
 

@@ -69,8 +69,8 @@ class SignalingGame:
 
     self.random = np.random.default_rng(0) # default seed = 0. Can be changed with set_random_seed()
 
-    self.sender = Sender(self.num_states, self.num_signals, self, null_signal)
-    self.receiver = Receiver(self.num_signals, self.num_actions, self)
+    self.sender = Sender(self.num_states, self.num_signals, null_signal)
+    self.receiver = Receiver(self.num_signals, self.num_actions)
 
     self.curr_state = None
     self.curr_signal = None
