@@ -176,8 +176,8 @@ class SignalingGame:
     if record_interval == -1:
       return
     
-    gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
+    # gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
     
-    gen_gif(sender.signal_history, receiver.action_history, 
-            self.expected_payoff, num_iter, record_interval, 100, gif_filename)
+    # gen_gif(sender.signal_history, receiver.action_history, 
+    #         self.expected_payoff, num_iter, record_interval, 100, gif_filename)
   
