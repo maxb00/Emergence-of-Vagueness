@@ -195,5 +195,5 @@ class SignalingGame:
     figsize = (15, 2 + self.num_signals*2)
     height_ratios = [(self.num_signals + (1 if self.null_signal else 0))/self.num_signals, 1, 1]
     
-    gen_gif(self.sender.signal_history, self.receiver.action_history, self.expected_payoff, num_iter, record_interval, 100, gif_filename, figsize, height_ratios)
+    gen_gif([self.sender.signal_history, self.receiver.signal_history], [self.receiver.action_history, self.sender.action_history], self.expected_payoff, num_iter, record_interval, 100, gif_filename, figsize, height_ratios)
   
