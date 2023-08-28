@@ -51,6 +51,14 @@ def gen_gif(signal_history: list, action_history: list, ep_fn, num_iter: int, re
   images = []
   for filename in [f"./images/game_{(j+1)*record_interval}.png" for j in range(num_images)]:
     images.append(imageio.imread(filename))
+
+  if not os.path.exists("./simulations"):
+    os.mkdir("simulations")
+  
+  subfolder = f"{len(signal_history[0][0])}_{len(signal_history[0])}_{len(action_history[0][0])}"
+  if not os.path.exists(f"./simulations/{subfolder}"):
+    os.makedirs(f"simulations/{subfolder}/")
+  
   imageio.mimsave(output_file, images, duration=duration)
 
 # f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
