@@ -149,7 +149,7 @@ class SignalingGame:
         image to display. -1 implies no image/gif will be displayed
     """
     for i in range(num_iter):
-      for j in range(2):
+      for _ in range(2):
         state = self.gen_state()
         self.curr_state = state
         if record_interval > 0 and (i+1) % record_interval == 0:

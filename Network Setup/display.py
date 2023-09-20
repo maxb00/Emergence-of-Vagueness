@@ -98,7 +98,7 @@ def gen_network_gif(senders: list, receivers: list, num_iter: int, record_interv
   if not os.path.exists("./simulations"):
     os.mkdir("simulations")
   
-  subfolder = f"{len(senders[0].signal_history[0][0])}_{len(senders[0].signal_history[0])}_{len(receivers[0].action_history[0][0])}"
+  subfolder = f"{len(senders[0].signal_history[0][0])}_{len(receivers[0].action_history[0])}_{len(receivers[0].action_history[0][0])}"
   if not os.path.exists(f"./simulations/{subfolder}"):
     os.makedirs(f"simulations/{subfolder}/")
 

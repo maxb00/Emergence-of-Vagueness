@@ -24,8 +24,11 @@ def get_args():
           args.reward_param_1, args.reward_param_2, args.null,
           args.num_iter, args.record)
 
-def main():
-  (nstates, nsignals, nactions, rp1, rp2, null, niter, record) = get_args()
+def main(info=None):
+  if info == None:
+    (nstates, nsignals, nactions, rp1, rp2, null, niter, record) = get_args()
+  else:
+    (nstates, nsignals, nactions, rp1, rp2, null, niter, record) = info
 
   network_size = 5 # to update
 
@@ -45,15 +48,15 @@ def main():
       else:
         game(random_senders[i], random_receivers[i], 1)
     
-  for i in range(network_size):
-    print(f"Sender {i}")
-    print(senders[i].signal_weights)
-    senders[i].print_signal_prob()
-    print()
-    print(f"Receiver {i}")
-    print(receivers[i].action_weights)
-    receivers[i].print_action_prob()
-    print()
+  # for i in range(network_size):
+  #   print(f"Sender {i}")
+  #   print(senders[i].signal_weights)
+  #   senders[i].print_signal_prob()
+  #   print()
+  #   print(f"Receiver {i}")
+  #   print(receivers[i].action_weights)
+  #   receivers[i].print_action_prob()
+  #   print()
 
   if record < 0:
     return
