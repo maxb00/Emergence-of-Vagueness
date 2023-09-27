@@ -55,12 +55,12 @@ def analyze():
 
 
 def run():
-  n_lst = [20, 30]
-  k_lst = [2, 3, 4]
-  c_lst = [1.5, 1.75, 2]
+  n_lst = [30]
+  k_lst = [2]
+  c_lst = [1, 1.5]
   d = 0.5
-  i = 4500
-  r = 150
+  i = 2000
+  r = 50
 
   avg = 50
 
@@ -73,7 +73,10 @@ def run():
           print(f"python main.py {n} {k} {n} {c} {d}{' -n' if null else ''} {i} -r {r}")
           try:
             main((n, k, n, c, d, null, i, r))
-          except RuntimeError:
+          except ValueError:
+            print("===> Failed")
+            # print(f"==> Try: python main.py {n} {k} {n} {c} {d}{' -n' if null else ''} {i-1000} -r {r-50}")
+            # main((n, k, n, c, d, null, i-1000, r-50))
             continue
           # for iter in range(avg):
           #   ep1, ep2 = main((n, k, n, c, d, null, i, r))

@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 import imageio.v2 as imageio
 import seaborn as sns
@@ -105,5 +106,36 @@ def gen_network_gif(agents: list, num_iter: int, record_interval: int, duration:
   imageio.mimsave(output_file, images, duration=duration)
 
 
+def distFromOptimal(signal_prob) -> float:
+  choices = np.zeros_like(signal_prob)
+  for i in range(len(choices[0])):
+    signal = np.argmax(signal_prob[:, i])
+    choices[signal, i] = 1
 
+  optimal_size = len(choices[0]) / len(choices)
+
+  optimal = np.zeros_like(choices)
+  used = []
+  for i in range(len(choices)):
+    j = 0
+    max_score = 0
+    max_j = 0
+    for _ in range(len(choices)):
+      if j in used:
+        j += 1
+        continue
+      score = 0
+      for _ in range(optimal_size):
+        score += choices[i, j]
+        j += 1
+      if score >= max_score:
+        max_score = score
+        max_j = j - optimal_size + 1
     
+    for k in range(optimal_size):
+      optimal[i, max_j + k] = 1
+      used.append(max_j + k)
+    
+
+
+

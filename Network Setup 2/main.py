@@ -59,19 +59,19 @@ def main(info=None):
       else:
         game(random_senders[i], random_receivers[i], 1)
     
-  for i in range(network_size):
-    print(f"Agent {i} of list 1")
-    print(agent_lst1[i].signal_weights)
-    agent_lst1[i].print_signal_prob()
-    print(agent_lst1[i].action_weights)
-    agent_lst1[i].print_action_prob()
-    print()
-    print(f"Agent {i} of list 2")
-    print(agent_lst2[i].signal_weights)
-    agent_lst2[i].print_signal_prob()
-    print(agent_lst2[i].action_weights)
-    agent_lst2[i].print_action_prob()
-    print()
+  # for i in range(network_size):
+  #   print(f"Agent {i} of list 1")
+  #   print(agent_lst1[i].signal_weights)
+  #   agent_lst1[i].print_signal_prob()
+  #   print(agent_lst1[i].action_weights)
+  #   agent_lst1[i].print_action_prob()
+  #   print()
+  #   print(f"Agent {i} of list 2")
+  #   print(agent_lst2[i].signal_weights)
+  #   agent_lst2[i].print_signal_prob()
+  #   print(agent_lst2[i].action_weights)
+  #   agent_lst2[i].print_action_prob()
+  #   print()
 
   if record < 0:
     return
