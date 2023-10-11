@@ -1,4 +1,5 @@
 import numpy as np
+from display import gen_image
 
 class Agent:
   def __init__(self, num_states, num_signals, num_actions, null_signal=False):
@@ -64,7 +65,7 @@ class Agent:
       if bmin > bmax:
         missing = True
       for j in range(bmin, bmax+1):
-        self.curr_state[i, j] = 100
+        self.curr_state[i, j] = 1
 
       if bmin < min_state:
         min_state = bmin
@@ -75,9 +76,9 @@ class Agent:
 
     if not missing:
       for i in range(min_state):
-        self.curr_state[min_bucket, i] = 100
+        self.curr_state[min_bucket, i] = 1
       for i in range(max_state+1, self.num_states):
-        self.curr_state[max_bucket, i] = 100
+        self.curr_state[max_bucket, i] = 1
 
 n = 50
 k = 2
@@ -101,5 +102,5 @@ agent3 = Agent(n, k, n)
 agent3.learn(pairs)
 print(agent3.curr_state)
 
-
+gen_image([agent1.curr_state, agent2.curr_state, agent3.curr_state])
 
