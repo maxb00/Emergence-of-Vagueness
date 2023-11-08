@@ -3,7 +3,7 @@ import imageio.v2 as imageio
 import seaborn as sns
 import os
 
-def gen_gif(signal_history: list, action_history: list, ep_fn, num_iter: int, record_interval: int, duration: int, output_file: str):
+def gen_gif(signal_history: list, action_history: list, ep_fn, opt_payoff: float, info_measure, num_iter: int, record_interval: int, duration: int, output_file: str):
   """Generates a heatmap gif of the whole simulation and saves it into 
   test.gif
 
@@ -17,15 +17,19 @@ def gen_gif(signal_history: list, action_history: list, ep_fn, num_iter: int, re
   if not os.path.exists("./images"):
     os.mkdir("images")
 
-  epx = []
+  ix = []
   epy = []
+  opty = []
+  infoy = []
 
   for i in range(num_images):
-    fig, axs = plt.subplots(3, 1, figsize=(8, 6))
+    fig, axs = plt.subplots(4, 1, figsize=(8, 6))
     plt.tight_layout(pad=3)
 
-    epx.append((i+1)*record_interval)
+    ix.append((i+1)*record_interval)
     epy.append(ep_fn(signal_history[i], action_history[i]))
+    opty.append(opt_payoff)
+    infoy.append(info_measure(signal_history[i]))
 
     sns.heatmap(signal_history[i], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, 
     fmt=".1f", ax=axs[0])
@@ -39,10 +43,17 @@ def gen_gif(signal_history: list, action_history: list, ep_fn, num_iter: int, re
     axs[1].set_ylabel("messages")
     axs[1].set_title("Receiver\'s weights")
 
-    axs[2].plot(epx, epy)
+    axs[2].plot(ix, epy, label="expected")
+    axs[2].plot(ix, opty, label="optimal")
+    axs[2].legend(loc="upper left")
     axs[2].set_xlabel("rollout")
     axs[2].set_ylabel("expected payoff")
     axs[2].set_title("Expected payoff by rollout")
+
+    axs[3].plot(ix, infoy)
+    axs[3].set_xlabel("rollout")
+    axs[3].set_ylabel("info measure")
+    axs[3].set_title("Info measure by rollout")
 
     fig.suptitle(f"Rollout {(i+1)*record_interval}")
     plt.savefig(f"./images/game_{(i+1)*record_interval}.png")

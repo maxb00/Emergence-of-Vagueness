@@ -21,8 +21,11 @@ def get_args():
           args.reward_param_1, args.reward_param_2, args.null,
           args.num_iter, args.record)
 
-def main():
-  (nstates, nsignals, nactions, rp1, rp2, null, niter, record) = get_args()
+def main(info=None):
+  if info == None:
+    (nstates, nsignals, nactions, rp1, rp2, null, niter, record) = get_args()
+  else:
+    (nstates, nsignals, nactions, rp1, rp2, null, niter, record) = info
 
   game = SignalingGame(nstates, nsignals, nactions, 
                        (rp1, rp2), null_signal=null)
