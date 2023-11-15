@@ -3,7 +3,7 @@ import imageio.v2 as imageio
 import seaborn as sns
 import os
 
-def gen_gif(signal_history: list, action_history: list, ep_fn, opt_payoff: float, info_measure, num_iter: int, record_interval: int, duration: int, output_file: str):
+def gen_gif(signal_history: list, action_history: list, ep_fn, opt_payoff: float, info_measure, opt_info: float, num_iter: int, record_interval: int, duration: int, output_file: str):
   """Generates a heatmap gif of the whole simulation and saves it into 
   test.gif
 
@@ -19,8 +19,9 @@ def gen_gif(signal_history: list, action_history: list, ep_fn, opt_payoff: float
 
   ix = []
   epy = []
-  opty = []
+  optp_y = []
   infoy = []
+  opti_y = []
 
   for i in range(num_images):
     fig, axs = plt.subplots(4, 1, figsize=(8, 6))
@@ -28,8 +29,9 @@ def gen_gif(signal_history: list, action_history: list, ep_fn, opt_payoff: float
 
     ix.append((i+1)*record_interval)
     epy.append(ep_fn(signal_history[i], action_history[i]))
-    opty.append(opt_payoff)
+    optp_y.append(opt_payoff)
     infoy.append(info_measure(signal_history[i]))
+    opti_y.append(opt_info)
 
     sns.heatmap(signal_history[i], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, 
     fmt=".1f", ax=axs[0])
@@ -44,13 +46,15 @@ def gen_gif(signal_history: list, action_history: list, ep_fn, opt_payoff: float
     axs[1].set_title("Receiver\'s weights")
 
     axs[2].plot(ix, epy, label="expected")
-    axs[2].plot(ix, opty, label="optimal")
+    axs[2].plot(ix, optp_y, label="optimal")
     axs[2].legend(loc="upper left")
     axs[2].set_xlabel("rollout")
     axs[2].set_ylabel("expected payoff")
     axs[2].set_title("Expected payoff by rollout")
 
-    axs[3].plot(ix, infoy)
+    axs[3].plot(ix, infoy, label="current")
+    axs[3].plot(ix, opti_y, label="optimal")
+    axs[3].legend(loc="upper left")
     axs[3].set_xlabel("rollout")
     axs[3].set_ylabel("info measure")
     axs[3].set_title("Info measure by rollout")
@@ -66,7 +70,7 @@ def gen_gif(signal_history: list, action_history: list, ep_fn, opt_payoff: float
   if not os.path.exists("./simulations"):
     os.mkdir("simulations")
   
-  subfolder = f"{len(signal_history[0][0])}_{len(signal_history[0])}_{len(action_history[0][0])}"
+  subfolder = f"{len(signal_history[0][0])}_{len(action_history[0])}_{len(action_history[0][0])}"
   if not os.path.exists(f"./simulations/{subfolder}"):
     os.makedirs(f"simulations/{subfolder}/")
   

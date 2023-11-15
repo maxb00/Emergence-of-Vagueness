@@ -141,9 +141,23 @@ class SignalingGame:
       inf_sig = 0
       for j in range(self.num_states):
         inf_sig += prob[i, j] * np.log(prob[i, j] * self.num_states)
-      inf += inf_sig
+
+      inf += (np.sum(signal_prob[i]) / self.num_states) * inf_sig
 
     return inf
+  
+  def optimal_info(self) -> float:
+    opt_m = 2 * (self.reward_param[0] // self.reward_param[1]) + 1
+    m_null = self.num_states - self.num_signals * opt_m
+    m = self.num_states // self.num_signals
+    z = self.num_states % self.num_signals
+
+    if self.null_signal and m_null > 0:
+      opt_info = np.log(self.num_states) - (self.num_signals*opt_m/self.num_states)*np.log(opt_m) - (1-self.num_signals*opt_m/self.num_states)*np.log(m_null)
+    else:
+      opt_info = np.log(self.num_states) - (z/self.num_signals)*np.log(m+1) - (1-z/self.num_signals)*np.log(m)
+
+    return opt_info
 
   def gen_state(self) -> int:
     """Generates a random (world) state
@@ -203,5 +217,5 @@ class SignalingGame:
     
     gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
     
-    gen_gif(self.sender.signal_history, self.receiver.action_history, self.expected_payoff, self.optimal_payoff(), self.info_measure, num_iter, record_interval, 100, gif_filename)
+    gen_gif(self.sender.signal_history, self.receiver.action_history, self.expected_payoff, self.optimal_payoff(), self.info_measure, self.optimal_info(), num_iter, record_interval, 100, gif_filename)
   
