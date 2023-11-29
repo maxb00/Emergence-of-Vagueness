@@ -149,7 +149,7 @@ class SignalingGame:
         image to display. -1 implies no image/gif will be displayed
     """
     for i in range(num_iter):
-      for _ in range(2):
+      for j in range(2):
         state = self.gen_state()
         self.curr_state = state
         if record_interval > 0 and (i+1) % record_interval == 0:
@@ -166,24 +166,24 @@ class SignalingGame:
         self.sender.sender_update(self.history[-1])
         self.receiver.receiver_update(self.history[-1])
 
-        # if i == num_iter - 1 and j == 1:
-        #   print(f"game={self.history[-1]}")
-        #   print("Agent 1's weights:")
-        #   print("Signal weights & probs:")
-        #   print(self.sender.signal_weights)
-        #   self.sender.print_signal_prob()
-        #   print("Action weights & probs:")
-        #   print(self.sender.action_weights)
-        #   self.sender.print_action_prob()
-        #   print()
-        #   print("Agent 2's weights:")
-        #   print("Signal weights & probs:")
-        #   print(self.receiver.signal_weights)
-        #   self.receiver.print_signal_prob()
-        #   print("Action weights & probs:")
-        #   print(self.receiver.action_weights)
-        #   self.receiver.print_action_prob()
-        #   print()
+        if i == num_iter - 1 and j == 1:
+          print(f"game={self.history[-1]}")
+          print("Agent 1's weights:")
+          print("Signal weights & probs:")
+          print(self.sender.signal_weights)
+          self.sender.print_signal_prob()
+          print("Action weights & probs:")
+          print(self.sender.action_weights)
+          self.sender.print_action_prob()
+          print()
+          print("Agent 2's weights:")
+          print("Signal weights & probs:")
+          print(self.receiver.signal_weights)
+          self.receiver.print_signal_prob()
+          print("Action weights & probs:")
+          print(self.receiver.action_weights)
+          self.receiver.print_action_prob()
+          print()
 
         self.sender, self.receiver = self.receiver, self.sender
 

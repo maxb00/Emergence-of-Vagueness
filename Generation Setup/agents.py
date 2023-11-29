@@ -35,10 +35,11 @@ class Agent:
     pairs = []
     for _ in range(num_pair):
       state = np.random.choice(avail_states)
-      if max(self.curr_state[:, state]) == 0:
-        signal = -1
-      else:
-        signal = np.argmax(self.curr_state[:, state])
+      while max(self.curr_state[:, state]) == 0:
+        avail_states.remove(state)
+        state = np.random.choice(avail_states)
+      
+      signal = np.argmax(self.curr_state[:, state])
 
       pairs.append((state, signal))
       avail_states.remove(state)

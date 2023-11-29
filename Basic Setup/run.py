@@ -1,8 +1,8 @@
 from main import main
 
 def run():
-  n_lst = [30]
-  k_lst = [4]
+  n_lst = [20, 30]
+  k_lst = [2, 3]
   c = 1
   d_lst = [0.5, 0.3, 0.25]
   i = 2000

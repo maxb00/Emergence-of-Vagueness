@@ -138,6 +138,8 @@ class SignalingGame:
 
     inf = 0
     for i in range(self.num_signals):
+      if self.null_signal and i == self.num_signals:
+        break
       inf_sig = 0
       for j in range(self.num_states):
         inf_sig += prob[i, j] * np.log(prob[i, j] * self.num_states)
@@ -153,7 +155,7 @@ class SignalingGame:
     z = self.num_states % self.num_signals
 
     if self.null_signal and m_null > 0:
-      opt_info = np.log(self.num_states) - (self.num_signals*opt_m/self.num_states)*np.log(opt_m) - (1-self.num_signals*opt_m/self.num_states)*np.log(m_null)
+      opt_info = opt_m/self.num_states * self.num_signals * np.log(self.num_states/opt_m)
     else:
       opt_info = np.log(self.num_states) - (z/self.num_signals)*np.log(m+1) - (1-z/self.num_signals)*np.log(m)
 
