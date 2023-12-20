@@ -17,7 +17,25 @@ def gauss_reward_fn(param: tuple[float, float], null_signal=False):
   def get_reward(state, action):
     if null_signal and action == -1:
       return 0
-    return param[0] * (1 / 2**(4*(state - action)**2/param[1]**2))
+    return param[0] * 16**(-(state - action)**2/param[1]**2)
+  
+  return get_reward
+
+def linear_reward_fn(param: tuple[float, float], null_signal=False):
+  """Returns a linear reward function based on the distance between the state and the action
+
+  Args:
+    param (tuple[float, float]): the two parameters to be used as constants in the
+      reward function
+    null_signal (boolean): null signal case
+
+  Returns:
+    function: a linear reward function
+  """
+  def get_reward(state, action):
+    if null_signal and action == -1:
+      return 0
+    return param[0] - param[1] * abs(state - action)
   
   return get_reward
 
@@ -126,13 +144,15 @@ class SignalingGame:
     if self.null_signal and opt_bucket < self.num_states // self.num_signals:
       return (self.reward_param[0]*opt_bucket - self.reward_param[1]*(opt_bucket**2-1)/4) * self.num_signals / self.num_states
     else:
-      m = self.num_states // self.num_signals
-      z = self.num_states % self.num_signals
+      n, k = self.num_states, self.num_signals
+      c, d = self.reward_param
+      m = n // k
+      z = n % k
 
       if m % 2 == 0:
-        return self.reward_param[0] - self.reward_param[1]*m*(self.num_states+z)/(4*self.num_states)
+        return (k*(c+2*c*sum([16**(-i**2/d**2) for i in range(1, m//2)])) + (k+z)*c*2**(-m**2/d**2))/n
       else:
-        return self.reward_param[0] - self.reward_param[1]*(m+1)*(self.num_states+z-self.num_signals)/(4*self.num_states)
+        return (k*(c+2*c*sum([16**(-i**2/d**2) for i in range(1, (m+1)//2)])) + z*c*2**(-(m+1)**2/d**2))/n
     
   def info_measure(self, signal_prob) -> float:
     prob = (signal_prob.T / np.sum(signal_prob, axis=1)).T
@@ -161,6 +181,15 @@ class SignalingGame:
       opt_info = np.log(self.num_states) - (z/self.num_signals)*np.log(m+1) - (1-z/self.num_signals)*np.log(m)
 
     return opt_info
+  
+  def vagueness_lvl(self, signal_prob) -> float:
+    vsum = 0
+    for i in range(self.num_states):
+      prob = np.sort(signal_prob[:, i])
+
+      vsum += 1 - (prob[-1] - prob[-2])
+
+    return vsum / self.num_states
 
   def gen_state(self) -> int:
     """Generates a random (world) state
@@ -207,19 +236,26 @@ class SignalingGame:
       self.sender.update(self.history[-1])
       self.receiver.update(self.history[-1])
 
-      if i == num_iter - 1:
-        print(f"game={self.history[-1]}")
-        print("Signal weights & probs:")
-        print(self.sender.signal_weights)
-        self.sender.print_signal_prob()
-        print("Action weights & probs:")
-        print(self.receiver.action_weights)
-        self.receiver.print_action_prob()
+      # if i == num_iter - 1:
+        # print(f"game={self.history[-1]}")
+        # print("Signal weights & probs:")
+        # print(self.sender.signal_weights)
+        # self.sender.print_signal_prob()
+        # print("Action weights & probs:")
+        # print(self.receiver.action_weights)
+        # self.receiver.print_action_prob()
+        # print(self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1]))
+        # print(self.optimal_payoff())
+        # print(self.vagueness_lvl(self.sender.signal_history[-1]))
 
     if record_interval == -1:
       return
     
-    gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/({self.reward_param[0]}, {self.reward_param[1]}, {self.stimgen_width}){'_null' if self.null_signal else ''}_{num_iter}.gif"
+    print(self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1]) / self.optimal_payoff())
     
-    gen_gif(self.sender.signal_history, self.receiver.action_history, self.expected_payoff, self.optimal_payoff(), self.info_measure, self.optimal_info(), num_iter, record_interval, 100, gif_filename)
+    return self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1]) / self.optimal_payoff()
+    
+    # gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/({self.reward_param[0]}, {self.reward_param[1]}, {self.stimgen_width}){'_null' if self.null_signal else ''}_{num_iter}.gif"
+    
+    # gen_gif(self.sender.signal_history, self.receiver.action_history, self.expected_payoff, self.optimal_payoff(), self.info_measure, self.optimal_info(), num_iter, record_interval, 100, gif_filename)
   

@@ -16,7 +16,9 @@ def stimgen(width: int, n: int) -> float:
   Returns:
     float: the coefficient of the contiguous reward
   """
-  return 1 / 2**(4*n**2/width**2)
+  if width == 0:
+    return 0
+  return 16**(-n**2/width**2)
 
 class Sender:
   """The sender of a signaling game
@@ -58,18 +60,7 @@ class Sender:
     Returns:
       int: a signal. -1 indicates a null signal
     """
-    # prob = self.signal_weights / np.sum(self.signal_weights, axis=0)
-    # signal = np.random.choice(self.num_signals, p=prob.T[state])
-    # if self.null_signal and signal == self.num_signals-1:
-    #   signal = -1
-    # self.curr_signal = signal
-
-    # if record:
-    #   self.signal_history.append(prob)
-
-    exp = np.exp(self.signal_weights)
-    sum_exp = np.sum(exp, axis=0)
-    prob = exp / sum_exp
+    prob = self.signal_weights / np.sum(self.signal_weights, axis=0)
     signal = np.random.choice(self.num_signals, p=prob.T[state])
     if self.null_signal and signal == self.num_signals-1:
       signal = -1
@@ -77,6 +68,17 @@ class Sender:
 
     if record:
       self.signal_history.append(prob)
+
+    # exp = np.exp(self.signal_weights)
+    # sum_exp = np.sum(exp, axis=0)
+    # prob = exp / sum_exp
+    # signal = np.random.choice(self.num_signals, p=prob.T[state])
+    # if self.null_signal and signal == self.num_signals-1:
+    #   signal = -1
+    # self.curr_signal = signal
+
+    # if record:
+    #   self.signal_history.append(prob)
 
     return signal
   
@@ -88,11 +90,17 @@ class Sender:
     """
     state, signal = curr_game["state"], curr_game["signal"]
     reward = curr_game["reward"]
+    # if reward < 0:
+    #   self.signal_weights += -reward
+
     self.signal_weights[signal, state] += reward
 
     l = r = state
     for i in range(1, self.num_states//2+1):
       stimgen_reward = stimgen(self.stimgen_width, i) * reward
+
+      if stimgen_reward == 0:
+        break
 
       r += 1
       if r < self.num_states:
@@ -156,19 +164,7 @@ class Receiver:
     Returns:
       int: an action
     """
-    # prob = self.action_weights.T / np.sum(self.action_weights, axis=1)
-    # if signal == -1:
-    #   action = -1
-    # else:
-    #   action = np.random.choice(self.num_actions, p=prob.T[signal])
-    # self.curr_action = action
-
-    # if record:
-    #   self.action_history.append(prob.T)
-
-    exp = np.exp(self.action_weights)
-    sum_exp = np.sum(exp, axis=1)
-    prob = exp.T / sum_exp
+    prob = self.action_weights.T / np.sum(self.action_weights, axis=1)
     if signal == -1:
       action = -1
     else:
@@ -177,6 +173,18 @@ class Receiver:
 
     if record:
       self.action_history.append(prob.T)
+
+    # exp = np.exp(self.action_weights)
+    # sum_exp = np.sum(exp, axis=1)
+    # prob = exp.T / sum_exp
+    # if signal == -1:
+    #   action = -1
+    # else:
+    #   action = np.random.choice(self.num_actions, p=prob.T[signal])
+    # self.curr_action = action
+
+    # if record:
+    #   self.action_history.append(prob.T)
 
     return action
   
@@ -188,11 +196,16 @@ class Receiver:
     """
     signal, action = curr_game["signal"], curr_game["action"]
     reward = curr_game["reward"]
+    # if reward < 0:
+    #   self.action_weights[signal, :] += -reward
     self.action_weights[signal, action] += reward
 
     l = r = action
     for i in range(1, self.num_actions//2+1):
       stimgen_reward = stimgen(self.stimgen_width, i) * reward
+
+      if stimgen_reward == 0:
+        break
 
       r += 1
       if r < self.num_actions:

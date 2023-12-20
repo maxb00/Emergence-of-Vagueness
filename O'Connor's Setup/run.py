@@ -1,24 +1,47 @@
 from main import main
+from display import gen_graph
 
 def run():
-  n_lst = [20, 30]
-  k_lst = [2, 3, 4]
+
+  gen_graph([
+    [0.02972002328828833, 0.029756293761484674, 0.029752217632661032, 0.030110657440503907, 0.034134998435105354, 0.06841502983041481],
+    [0.09205175042280934, 0.11598154535049943, 0.14435088012378508, 0.24258834640687452, 0.5398414013028098, 0.5014354111264238],
+    [0.7782322114818868, 0.7769392448599689, 0.8470317274604855, 0.8133006032100287, 0.6823790274900483, 0.6823790274900483]
+  ])
+  exit(0)
+
+  n_lst = [200]
+  k_lst = [40]
   c = 1
-  d_lst = [6]
-  w_lst = [2, 4]
-  i = 1000000
-  r = 12500
+  d_lst = [4]
+  w_lst = [0, 0.25, 0.5, 1, 2, 4]
+  i_lst = [10000000] 
+  r = 1000000
+
+  avg_vague_lvls = []
+  success_rates = []
 
   for n in n_lst:
     for k in k_lst:
       for ind, d in enumerate(d_lst):
-        for w in w_lst:
+        for i in i_lst:
+          success_rates.append([])
           for null in [False]:
-            print(f"python main.py {n} {k} {n} {c} {d} {w}{' -n' if null else ''} {i} -r {r}")
-            try:
-              main((n, k, n, c, d, w, null, i, r))
-            except ValueError:
-              print("==> Failed")
-              continue
+            for w in w_lst:   
+              sum_success_rates = 0
+              for ii in range(1):
+                print(f"python main.py {n} {k} {n} {c} {d} {w}{' -n' if null else ''} {i} -r {i} #{ii+1}", end="")
+                try:
+                  sr = main((n, k, n, c, d, w, null, i, i))
+                  print(f" --> {sr}")
+                  sum_success_rates += sr
+                except ValueError:
+                  print("==> Failed")
+                  continue
+            
+              success_rates[-1].append(sum_success_rates / 1)
+              print(f" => avg_vague_lvl = {sum_success_rates / 1}")
+  
+  # gen_graph(success_rates)
 
 run()

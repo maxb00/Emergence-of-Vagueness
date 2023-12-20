@@ -31,7 +31,7 @@ def main(info=None):
 
   game = SignalingGame(nstates, nsignals, nactions, 
                        (rp1, rp2), sgw, null_signal=null)
-  game(niter, record)
+  return game(niter, record)
 
 if __name__ == '__main__':
   main()
