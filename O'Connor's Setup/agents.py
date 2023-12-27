@@ -60,8 +60,12 @@ class Sender:
     Returns:
       int: a signal. -1 indicates a null signal
     """
-    prob = self.signal_weights / np.sum(self.signal_weights, axis=0)
-    signal = np.random.choice(self.num_signals, p=prob.T[state])
+    if record:
+      prob = self.signal_weights / np.sum(self.signal_weights, axis=0)
+      signal = np.random.choice(self.num_signals, p=prob.T[state])
+    else:
+      prob = self.signal_weights[:, state] / np.sum(self.signal_weights[:, state])
+      signal = np.random.choice(self.num_signals, p=prob)
     if self.null_signal and signal == self.num_signals-1:
       signal = -1
     self.curr_signal = signal
@@ -164,11 +168,17 @@ class Receiver:
     Returns:
       int: an action
     """
-    prob = self.action_weights.T / np.sum(self.action_weights, axis=1)
+    if record:
+      prob = self.action_weights.T / np.sum(self.action_weights, axis=1)
+    else:
+      prob = self.action_weights[signal] / np.sum(self.action_weights[signal])
     if signal == -1:
       action = -1
     else:
-      action = np.random.choice(self.num_actions, p=prob.T[signal])
+      if record:
+        action = np.random.choice(self.num_actions, p=prob.T[signal])
+      else:
+        action = np.random.choice(self.num_actions, p=prob)
     self.curr_action = action
 
     if record:

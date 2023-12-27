@@ -251,7 +251,7 @@ class SignalingGame:
     if record_interval == -1:
       return
     
-    print(self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1]) / self.optimal_payoff())
+    # print(self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1]) / self.optimal_payoff())
     
     return self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1]) / self.optimal_payoff()
     
