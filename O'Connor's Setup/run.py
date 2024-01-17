@@ -32,15 +32,15 @@ def run():
               for ii in range(1):
                 print(f"python main.py {n} {k} {n} {c} {d} {w}{' -n' if null else ''} {i} -r {i} #{ii+1}", end="")
                 try:
-                  sr = main((n, k, n, c, d, w, null, i, i))
-                  print(f" --> {sr}")
-                  sum_success_rates += sr
+                  vl = main((n, k, n, c, d, w, null, i, i))
+                  print(f" --> {vl}")
+                  sum_success_rates += vl
                 except ValueError:
                   print("==> Failed")
                   continue
             
               success_rates[-1].append(sum_success_rates / 1)
-              print(f" => avg_vague_lvl = {sum_success_rates / 1}")
+              print(f" => success_rates = {sum_success_rates / 1}")
   
   gen_graph(success_rates)
 

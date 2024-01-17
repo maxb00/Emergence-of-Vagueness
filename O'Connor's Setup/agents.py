@@ -95,9 +95,11 @@ class Sender:
     state, signal = curr_game["state"], curr_game["signal"]
     reward = curr_game["reward"]
     # if reward < 0:
-    #   self.signal_weights += -reward
+    #   self.signal_weights[:, state] += -reward
 
     self.signal_weights[signal, state] += reward
+    if self.signal_weights[signal, state] < 1:
+      self.signal_weights[signal, state] = 1
 
     l = r = state
     for i in range(1, self.num_states//2+1):
@@ -110,9 +112,15 @@ class Sender:
       if r < self.num_states:
         self.signal_weights[signal, r] += stimgen_reward
 
+        if self.signal_weights[signal, r] < 1:
+          self.signal_weights[signal, r] = 1
+
       l -= 1
       if l >= 0:
         self.signal_weights[signal, l] += stimgen_reward
+      
+        if self.signal_weights[signal, l] < 1:
+          self.signal_weights[signal, l] = 1
 
   def print_signal_prob(self):
     """Prints the current signal probabilities"""
@@ -209,6 +217,8 @@ class Receiver:
     # if reward < 0:
     #   self.action_weights[signal, :] += -reward
     self.action_weights[signal, action] += reward
+    if self.action_weights[signal, action] < 1:
+      self.action_weights[signal, action] = 1
 
     l = r = action
     for i in range(1, self.num_actions//2+1):
@@ -221,9 +231,15 @@ class Receiver:
       if r < self.num_actions:
         self.action_weights[signal, r] += stimgen_reward
 
+        if self.action_weights[signal, r] < 1:
+          self.action_weights[signal, r] = 1
+
       l -= 1
       if l >= 0:
         self.action_weights[signal, l] += stimgen_reward
+
+        if self.action_weights[signal, l] < 1:
+          self.action_weights[signal, l] = 1
 
   def print_action_prob(self):
     """Prints the current action probabilities"""

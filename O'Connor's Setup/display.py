@@ -90,16 +90,16 @@ def gen_graph(avg_vague_lvls: list):
   ax.plot(rif_widths, avg_vague_lvls[0], 'o-')
   # ax.plot(rif_widths, avg_vague_lvls[1], 's-', label="20")
   # ax.plot(rif_widths, avg_vague_lvls[2], 'D-', label="10")
-  # ax.legend(loc="upper right", title="Signals")
+  ax.legend(loc="upper right", title="Trial Length")
   ax.set_xlabel("Reinforcement Width")
-  ax.set_ylabel("Success Rate")
-  ax.set_xlim(0, 20)
+  ax.set_ylabel("Success")
+  ax.set_xlim(0, 4)
   ax.set_ylim(0, 1)
   ax.spines['top'].set_visible(False)
   ax.spines['right'].set_visible(False)
-  ax.set_title("Figure 11")
+  ax.set_title("Figure 11 - negative")
 
   if not os.path.exists("./figures"):
     os.mkdir("figures")
 
-  plt.savefig("./figures/Figure-11.png")
+  plt.savefig("./figures/Figure-11-neg.png")
