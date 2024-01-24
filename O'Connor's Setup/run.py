@@ -3,11 +3,11 @@ from display import gen_graph
 
 def run():
 
-  n_lst = [1000]
-  k_lst = [4]
+  n_lst = [100]
+  k_lst = [5]
   c = 1
-  d_lst = [100]
-  w_lst = [0, 2, 10, 20]
+  d_lst = [10]
+  w_lst = [0, 4, 8, 12, 16]
   i_lst = [10000]
   avg_i = 10
   r = 1000000

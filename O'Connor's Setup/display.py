@@ -82,7 +82,7 @@ def gen_graph(avg_vague_lvls: list):
   if not os.path.exists("./images"):
     os.mkdir("images")
 
-  rif_widths = [0, 2, 10, 20]
+  rif_widths = [0, 4, 8, 12, 16]
 
   fig, ax = plt.subplots(1, 1, figsize=(8, 6))
   plt.tight_layout(pad=3)
@@ -93,13 +93,13 @@ def gen_graph(avg_vague_lvls: list):
   # ax.legend(loc="upper right", title="Signals")
   ax.set_xlabel("Reinforcement Width")
   ax.set_ylabel("Success")
-  ax.set_xlim(0, 20)
+  ax.set_xlim(0, 16)
   ax.set_ylim(0, 1)
   ax.spines['top'].set_visible(False)
   ax.spines['right'].set_visible(False)
-  ax.set_title("Figure 11 - original")
+  ax.set_title("Figure 7 - original 2")
 
   if not os.path.exists("./figures"):
     os.mkdir("figures")
 
-  plt.savefig("./figures/Figure-11-orig.png")
+  plt.savefig("./figures/Figure-7-orig2.png")
