@@ -79,8 +79,6 @@ def gen_gif(signal_history: list, action_history: list, ep_fn, opt_payoff: float
 # f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
 
 def gen_graph(avg_vague_lvls: list):
-  if not os.path.exists("./images"):
-    os.mkdir("images")
 
   rif_widths = [0, 4, 8, 12, 16]
 
@@ -103,3 +101,41 @@ def gen_graph(avg_vague_lvls: list):
     os.mkdir("figures")
 
   plt.savefig("./figures/Figure-7-orig2.png")
+
+def gen_extended_graph(vagueness_lvls: list, success_rates: list):
+
+  rif_widths = [0, 2, 5, 20]
+
+  fig, ax = plt.subplots(1, 2, figsize=(16, 6))
+  plt.tight_layout(pad=3)
+
+  ax[0].plot(rif_widths, vagueness_lvls[0], 'o-', label="10,000")
+  ax[0].plot(rif_widths, vagueness_lvls[1], 's-', label="50,000")
+  ax[0].plot(rif_widths, vagueness_lvls[2], 'D-', label="100,000")
+  ax[0].legend(loc="upper right", title="Trial Length")
+  ax[0].set_xlabel("Reinforcement Width")
+  ax[0].set_ylabel("Vagueness Level")
+  ax[0].set_xlim(0, 20)
+  ax[0].set_ylim(0, 1)
+  ax[0].spines['top'].set_visible(False)
+  ax[0].spines['right'].set_visible(False)
+  ax[0].set_title("Vagueness Levels")
+
+  ax[1].plot(rif_widths, success_rates[0], 'o-', label="10,000")
+  ax[1].plot(rif_widths, success_rates[1], 's-', label="50,000")
+  ax[1].plot(rif_widths, success_rates[2], 'D-', label="100,000")
+  ax[1].legend(loc="upper right", title="Trial Length")
+  ax[1].set_xlabel("Reinforcement Width")
+  ax[1].set_ylabel("Success")
+  ax[1].set_xlim(0, 20)
+  ax[1].set_ylim(0, 1)
+  ax[1].spines['top'].set_visible(False)
+  ax[1].spines['right'].set_visible(False)
+  ax[1].set_title("Success Rates")
+
+  fig.suptitle(f"Figure 11h")
+
+  if not os.path.exists("./figures"):
+    os.mkdir("figures")
+
+  plt.savefig("./figures/Original-extended/Figure-11.png")

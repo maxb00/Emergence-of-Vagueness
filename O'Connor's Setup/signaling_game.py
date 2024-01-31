@@ -510,9 +510,10 @@ class SignalingGame:
     if record_interval == -1:
       return
     
-    # return self.vagueness_lvl(self.sender.signal_history[-1])
+    vagueness_lvl = self.vagueness_lvl(self.sender.signal_history[-1])
+    success_rate = self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1]) / self.optimal_payoff()
     
-    return self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1]) / self.optimal_payoff()
+    return vagueness_lvl, success_rate
     
     # gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
     
