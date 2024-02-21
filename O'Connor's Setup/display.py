@@ -104,38 +104,84 @@ def gen_graph(avg_vague_lvls: list):
 
 def gen_extended_graph(vagueness_lvls: list, success_rates: list):
 
-  rif_widths = [0, 2, 5, 20]
+  rif_widths = [0, 2, 4, 6]
 
   fig, ax = plt.subplots(1, 2, figsize=(16, 6))
   plt.tight_layout(pad=3)
 
-  ax[0].plot(rif_widths, vagueness_lvls[0], 'o-', label="10,000")
-  ax[0].plot(rif_widths, vagueness_lvls[1], 's-', label="50,000")
-  ax[0].plot(rif_widths, vagueness_lvls[2], 'D-', label="100,000")
+  ax[0].plot(rif_widths, vagueness_lvls[0], '.-', label="1,000")
+  ax[0].plot(rif_widths, vagueness_lvls[1], ',-', label="5,000")
+  ax[0].plot(rif_widths, vagueness_lvls[2], 'o-', label="10,000")
+  ax[0].plot(rif_widths, vagueness_lvls[3], 's-', label="50,000")
+  ax[0].plot(rif_widths, vagueness_lvls[4], 'D-', label="100,000")
   ax[0].legend(loc="upper right", title="Trial Length")
   ax[0].set_xlabel("Reinforcement Width")
   ax[0].set_ylabel("Vagueness Level")
-  ax[0].set_xlim(0, 20)
-  ax[0].set_ylim(0, 1)
+  ax[0].set_xlim(0, 16)
+  # ax[0].set_ylim(-1, 1)
   ax[0].spines['top'].set_visible(False)
   ax[0].spines['right'].set_visible(False)
   ax[0].set_title("Vagueness Levels")
 
-  ax[1].plot(rif_widths, success_rates[0], 'o-', label="10,000")
-  ax[1].plot(rif_widths, success_rates[1], 's-', label="50,000")
-  ax[1].plot(rif_widths, success_rates[2], 'D-', label="100,000")
+  ax[1].plot(rif_widths, success_rates[0], '.-', label="1,000")
+  ax[1].plot(rif_widths, success_rates[1], ',-', label="5,000")
+  ax[1].plot(rif_widths, success_rates[2], 'o-', label="10,000")
+  ax[1].plot(rif_widths, success_rates[3], 's-', label="50,000")
+  ax[1].plot(rif_widths, success_rates[4], 'D-', label="100,000")
   ax[1].legend(loc="upper right", title="Trial Length")
   ax[1].set_xlabel("Reinforcement Width")
   ax[1].set_ylabel("Success")
-  ax[1].set_xlim(0, 20)
-  ax[1].set_ylim(0, 1)
+  ax[1].set_xlim(0, 16)
+  # ax[1].set_ylim(-1, 1)
   ax[1].spines['top'].set_visible(False)
   ax[1].spines['right'].set_visible(False)
   ax[1].set_title("Success Rates")
 
-  fig.suptitle(f"Figure 11h")
+  fig.suptitle(f"Figure 6")
 
   if not os.path.exists("./figures"):
     os.mkdir("figures")
 
-  plt.savefig("./figures/Original-extended/Figure-11.png")
+  plt.savefig("./figures/Original/Figure-6-extended.png")
+
+def gen_extended_graph2(vagueness_lvls: list, success_rates: list):
+
+  rif_widths = [0, 0.25, 0.5, 1, 2, 4]
+
+  fig, ax = plt.subplots(1, 2, figsize=(16, 6))
+  plt.tight_layout(pad=3)
+
+  ax[0].plot(rif_widths, vagueness_lvls[0], '.-', label="1,000")
+  ax[0].plot(rif_widths, vagueness_lvls[1], ',-', label="5,000")
+  ax[0].plot(rif_widths, vagueness_lvls[2], 'o-', label="10,000")
+  ax[0].plot(rif_widths, vagueness_lvls[3], 's-', label="50,000")
+  ax[0].plot(rif_widths, vagueness_lvls[4], 'D-', label="100,000")
+  ax[0].legend(loc="upper right", title="Trial Length")
+  ax[0].set_xlabel("Reinforcement Width")
+  ax[0].set_ylabel("Vagueness Level")
+  ax[0].set_xlim(0, 4)
+  # ax[0].set_ylim(-1, 1)
+  ax[0].spines['top'].set_visible(False)
+  ax[0].spines['right'].set_visible(False)
+  ax[0].set_title("Vagueness Levels")
+
+  ax[1].plot(rif_widths, success_rates[0], '.-', label="1,000")
+  ax[1].plot(rif_widths, success_rates[1], ',-', label="5,000")
+  ax[1].plot(rif_widths, success_rates[2], 'o-', label="10,000")
+  ax[1].plot(rif_widths, success_rates[3], 's-', label="50,000")
+  ax[1].plot(rif_widths, success_rates[4], 'D-', label="100,000")
+  ax[1].legend(loc="upper right", title="Trial Length")
+  ax[1].set_xlabel("Reinforcement Width")
+  ax[1].set_ylabel("Success")
+  ax[1].set_xlim(0, 4)
+  # ax[1].set_ylim(-1, 1)
+  ax[1].spines['top'].set_visible(False)
+  ax[1].spines['right'].set_visible(False)
+  ax[1].set_title("Success Rates")
+
+  fig.suptitle(f"Figure 8")
+
+  if not os.path.exists("./figures"):
+    os.mkdir("figures")
+
+  plt.savefig("./figures/Original/Figure-8-extended.png")

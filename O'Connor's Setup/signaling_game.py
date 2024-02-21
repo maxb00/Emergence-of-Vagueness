@@ -291,10 +291,10 @@ def linear_reward_fn(param: tuple[float, float], null_signal=False):
       return 0
     # return param[0] - param[1] * abs(state - action)
     reward = param[0] - param[1] * abs(state - action)
-    if reward >= 0:
+    if reward >= -1:
       return reward
 
-    return 0
+    return -1
   
   return get_reward
 
@@ -496,11 +496,9 @@ class SignalingGame:
         # print(f"game={self.history[-1]}")
         # print("Signal weights & probs:")
         # print(self.sender.signal_weights)
-        # print(np.max(self.sender.signal_weights))
         # self.sender.print_signal_prob()
         # print("Action weights & probs:")
         # print(self.receiver.action_weights)
-        # print(np.max(self.receiver.action_weights))
         # self.receiver.print_action_prob()
         # print(self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1]))
         # print(self.optimal_payoff())
@@ -511,7 +509,8 @@ class SignalingGame:
       return
     
     vagueness_lvl = self.vagueness_lvl(self.sender.signal_history[-1])
-    success_rate = self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1]) / self.optimal_payoff()
+    # success_rate = self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1]) / self.optimal_payoff()
+    success_rate = self.optimal_payoff() - self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1])
     
     return vagueness_lvl, success_rate
     

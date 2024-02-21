@@ -341,7 +341,7 @@ class Sender:
     state, signal = curr_game["state"], curr_game["signal"]
     reward = curr_game["reward"]
     self.signal_weights[signal, state] += reward
-    self.signal_weights[signal, state] = min(300, self.signal_weights[signal, state])
+    # self.signal_weights[signal, state] = min(300, self.signal_weights[signal, state])
 
     l = r = state
     for i in range(1,4):
@@ -350,12 +350,21 @@ class Sender:
       r += 1
       if r < self.num_states:
         self.signal_weights[signal, r] += stimgen_reward
-        self.signal_weights[signal, r] = min(300, self.signal_weights[signal, r])
+        # self.signal_weights[signal, r] = min(300, self.signal_weights[signal, r])
 
       l -= 1
       if l >= 0:
         self.signal_weights[signal, l] += stimgen_reward
-        self.signal_weights[signal, l] = min(300, self.signal_weights[signal, l])
+        # self.signal_weights[signal, l] = min(300, self.signal_weights[signal, l])
+
+    maxw = np.max(self.signal_weights[signal])
+    minw = np.min(self.signal_weights[signal])
+    if maxw > 300 and minw < -300:
+      self.signal_weights[signal] = (self.signal_weights[signal] - minw) * 600/(maxw-minw) - 300
+    elif maxw > 300:
+      self.signal_weights[signal] -= maxw - 300
+    elif minw < -300:
+      self.signal_weights[signal] += maxw - 300
 
   def print_signal_prob(self):
     """Prints the current signal probabilities"""
@@ -434,21 +443,30 @@ class Receiver:
     signal, action = curr_game["signal"], curr_game["action"]
     reward = curr_game["reward"]
     self.action_weights[signal, action] += reward
-    self.action_weights[signal, action] = min(300, self.action_weights[signal, action])
+    # self.action_weights[signal, action] = min(300, self.action_weights[signal, action])
 
-    l = r = action
-    for i in range(1,4):
-      stimgen_reward = stimgen(self.stimgen_width, i) * reward
+    maxw = np.max(self.action_weights[:, action])
+    minw = np.min(self.action_weights[:, action])
+    if maxw > 300 and minw < -300:
+      self.action_weights[:, action] = (self.action_weights[:, action] - minw) * 600/(maxw-minw) - 300
+    elif maxw > 300:
+      self.action_weights[:, action] -= maxw - 300
+    elif minw < -300:
+      self.action_weights[:, action] += maxw - 300
 
-      r += 1
-      if r < self.num_actions:
-        self.action_weights[signal, r] += stimgen_reward
-        self.action_weights[signal, r] = min(300, self.action_weights[signal, r])
+    # l = r = action
+    # for i in range(1,4):
+    #   stimgen_reward = stimgen(self.stimgen_width, i) * reward
 
-      l -= 1
-      if l >= 0:
-        self.action_weights[signal, l] += stimgen_reward
-        self.action_weights[signal, l] = min(300, self.action_weights[signal, l])
+    #   r += 1
+    #   if r < self.num_actions:
+    #     self.action_weights[signal, r] += stimgen_reward
+    #     self.action_weights[signal, r] = min(300, self.action_weights[signal, r])
+
+    #   l -= 1
+    #   if l >= 0:
+    #     self.action_weights[signal, l] += stimgen_reward
+    #     self.action_weights[signal, l] = min(300, self.action_weights[signal, l])
 
   def print_action_prob(self):
     """Prints the current action probabilities"""
