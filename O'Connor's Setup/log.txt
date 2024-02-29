@@ -1,0 +1,21 @@
+python main.py 20 3 20 1 6 0 1000000 -r 1000000
+Setup 1:
+ => avg_vague_lvls1 = 0.0
+ => success_rates1 = 0.10296530140645735
+Setup 2:
+ => avg_vague_lvls2 = 0.0
+ => success_rates2 = 0.10805276266041719
+Setup 3:
+ => avg_vague_lvls3 = 0.005690901666691733
+ => success_rates3 = 0.10244674747977793
+Setup 4:
+ => avg_vague_lvls4 = 0.014249853791488179
+ => success_rates4 = 0.08419693295559441
+Setup 5:
+ => avg_vague_lvls5 = 0.009380510483450295
+ => success_rates5 = 0.09445872388725687
+Setup 6:
+ => avg_vague_lvls6 = 0.009267052169508265
+ => success_rates6 = 0.09505764299297179
+Setup 7:
+==> Failed Setup 7

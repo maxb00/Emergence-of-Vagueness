@@ -185,3 +185,61 @@ def gen_extended_graph2(vagueness_lvls: list, success_rates: list):
     os.mkdir("figures")
 
   plt.savefig("./figures/Original/Figure-8-extended.png")
+
+def gen_comp_graph(figure: int, rif_widths: list, vagueness_lvls: list, success_rates: list):
+
+  # rif_widths = [0, 0.25, 0.5, 1, 2, 4]
+
+  fig, ax = plt.subplots(1, 2, figsize=(16, 6))
+  plt.tight_layout(pad=3)
+
+  ax[0].plot(rif_widths, vagueness_lvls[0], '.-', label="Setup 1")
+  # ax[0].plot(rif_widths, vagueness_lvls[1], ',-', label="Setup 2")
+  ax[0].plot(rif_widths, vagueness_lvls[2], 'o-', label="Setup 3")
+  # ax[0].plot(rif_widths, vagueness_lvls[3], 's-', label="Setup 4")
+  # ax[0].plot(rif_widths, vagueness_lvls[4], 'D-', label="Setup 5")
+  # ax[0].plot(rif_widths, vagueness_lvls[5], 'v-', label="Setup 6")
+  # ax[0].plot(rif_widths, vagueness_lvls[6], '^-', label="Setup 7")
+  # ax[0].plot(rif_widths, vagueness_lvls[7], '<-', label="Setup 8")
+  ax[0].plot(rif_widths, vagueness_lvls[8], 's-', label="Setup 1n")
+  ax[0].plot(rif_widths, vagueness_lvls[9], 'D-', label="Setup 3n")
+  ax[0].legend(loc="upper right", title="Setups")
+  ax[0].set_xlabel("Reinforcement Width")
+  ax[0].set_ylabel("Vagueness Level")
+  ax[0].set_xlim(0, rif_widths[-1])
+  ax[0].set_ylim(bottom=0)
+  ax[0].spines['top'].set_visible(False)
+  ax[0].spines['right'].set_visible(False)
+  ax[0].set_title("Vagueness Levels")
+
+  ax[1].plot(rif_widths, success_rates[0], '.-', label="Setup 1")
+  # ax[1].plot(rif_widths, success_rates[1], ',-', label="Setup 2")
+  ax[1].plot(rif_widths, success_rates[2], 'o-', label="Setup 3")
+  # ax[1].plot(rif_widths, success_rates[3], 's-', label="Setup 4")
+  # ax[1].plot(rif_widths, success_rates[4], 'D-', label="Setup 5")
+  # ax[1].plot(rif_widths, success_rates[5], 'v-', label="Setup 6")
+  # ax[1].plot(rif_widths, success_rates[6], '^-', label="Setup 7")
+  # ax[1].plot(rif_widths, success_rates[7], '<-', label="Setup 8")
+  ax[1].plot(rif_widths, success_rates[8], 's-', label="Setup 1n")
+  ax[1].plot(rif_widths, success_rates[9], 'D-', label="Setup 3n")
+  ax[1].legend(loc="upper right", title="Setups")
+  ax[1].set_xlabel("Reinforcement Width")
+  ax[1].set_ylabel("Information")
+  ax[1].set_xlim(0, rif_widths[-1])
+  ax[1].set_ylim(bottom=0)
+  ax[1].spines['top'].set_visible(False)
+  ax[1].spines['right'].set_visible(False)
+  ax[1].set_title("Informational Content")
+
+  if figure == 10:
+    fig.suptitle(f"Figure {figure+1}n")
+  else:
+    fig.suptitle(f"Figure {figure}n")
+
+  if not os.path.exists("./figures"):
+    os.mkdir("figures")
+
+  if figure == 10:
+    plt.savefig(f"./figures/Comparison/Figure-{figure+1}n.png")
+  else:
+    plt.savefig(f"./figures/Comparison/Figure-{figure}n.png")
