@@ -17,12 +17,12 @@ def run():
   i_lst = [
     [1000000], [1000000], [1000000], [1000000], [1000000]
   ]
-  avg_i = [10, 10, 1, 10, 1]
+  avg_i = [2, 2, 1, 2, 1]
   r = 1000000
 
   for fig in range(5):
-    avg_vague_lvls = [[] for _ in range(10)]
-    success_rates = [[] for _ in range(10)]
+    avg_vague_lvls = [[] for _ in range(8)]
+    success_rates = [[] for _ in range(8)]
 
     for n in n_lst[fig]:
       for k in k_lst[fig]:
@@ -34,14 +34,14 @@ def run():
               for w in w_lst[fig]:
                 sum_vague_lvls1 = 0
                 sum_success_rates1 = 0
-                sum_vague_lvls1n = 0
-                sum_success_rates1n = 0
+                # sum_vague_lvls1n = 0
+                # sum_success_rates1n = 0
                 sum_vague_lvls2 = 0
                 sum_success_rates2 = 0
                 sum_vague_lvls3 = 0
                 sum_success_rates3 = 0
-                sum_vague_lvls3n = 0
-                sum_success_rates3n = 0
+                # sum_vague_lvls3n = 0
+                # sum_success_rates3n = 0
                 sum_vague_lvls4 = 0
                 sum_success_rates4 = 0
                 sum_vague_lvls5 = 0
@@ -66,27 +66,27 @@ def run():
                     print("==> Failed Setup 1")
                     exit(0)
 
-                  try:
-                    print(f"Setup 1n-{ii+1}:")
-                    vl1n, sr1n = main((n, k, n, c, d, w, null, 100000, 100000, True, True, True, True)) #linear-exp-stimgen-neg
-
-                    sum_vague_lvls1n += vl1n
-                    sum_success_rates1n += sr1n
-                    
-                  except ValueError:
-                    print("==> Failed Setup 1n")
-                    exit(0)
-
                   # try:
-                  #   print(f"Setup 2-{ii+1}:")
-                  #   vl2, sr2 = main((n, k, n, c, d, w, null, 100000, 100000, True, True, False)) #linear-exp-no stimgen
+                  #   print(f"Setup 1n-{ii+1}:")
+                  #   vl1n, sr1n = main((n, k, n, c, d, w, null, 100000, 100000, True, True, True, True)) #linear-exp-stimgen-neg
 
-                  #   sum_vague_lvls2 += vl2
-                  #   sum_success_rates2 += sr2
+                  #   sum_vague_lvls1n += vl1n
+                  #   sum_success_rates1n += sr1n
                     
                   # except ValueError:
-                  #   print("==> Failed Setup 2")
+                  #   print("==> Failed Setup 1n")
                   #   exit(0)
+
+                  try:
+                    print(f"Setup 2-{ii+1}:")
+                    vl2, sr2 = main((n, k, n, c, d, w, null, 100000, 100000, True, True, False, False)) #linear-exp-no stimgen
+
+                    sum_vague_lvls2 += vl2
+                    sum_success_rates2 += sr2
+                    
+                  except ValueError:
+                    print("==> Failed Setup 2")
+                    exit(0)
 
                   try:
                     print(f"Setup 3-{ii+1}:")
@@ -99,121 +99,121 @@ def run():
                     print("==> Failed Setup 3")
                     exit(0)
 
-                  try:
-                    print(f"Setup 3n-{ii+1}:")
-                    vl3n, sr3n = main((n, k, n, c, d, w, null, i, i, True, False, True, True)) #linear-linear-stimgen-neg
+                  # try:
+                  #   print(f"Setup 3n-{ii+1}:")
+                  #   vl3n, sr3n = main((n, k, n, c, d, w, null, i, i, True, False, True, True)) #linear-linear-stimgen-neg
 
-                    sum_vague_lvls3n += vl3n
-                    sum_success_rates3n += sr3n
+                  #   sum_vague_lvls3n += vl3n
+                  #   sum_success_rates3n += sr3n
+                    
+                  # except ValueError:
+                  #   print("==> Failed Setup 3")
+                  #   exit(0)
+
+                  try:
+                    print(f"Setup 4-{ii+1}:")
+                    vl4, sr4 = main((n, k, n, c, d, w, null, i, i, True, False, False, False)) #linear-linear-no stimgen
+
+                    sum_vague_lvls4 += vl4
+                    sum_success_rates4 += sr4
                     
                   except ValueError:
-                    print("==> Failed Setup 3")
+                    print("==> Failed Setup 4")
                     exit(0)
 
-                  # try:
-                  #   print(f"Setup 4-{ii+1}:")
-                  #   vl4, sr4 = main((n, k, n, c, d, w, null, i, i, True, False, False)) #linear-linear-no stimgen
+                  try:
+                    print(f"Setup 5-{ii+1}:")
+                    vl5, sr5 = main((n, k, n, c, d, w, null, 100000, 100000, False, True, True, False)) #gauss-exp-stimgen
 
-                  #   sum_vague_lvls4 += vl4
-                  #   sum_success_rates4 += sr4
+                    sum_vague_lvls5 += vl5
+                    sum_success_rates5 += sr5
                     
-                  # except ValueError:
-                  #   print("==> Failed Setup 4")
-                  #   exit(0)
+                  except ValueError:
+                    print("==> Failed Setup 5")
+                    exit(0)
 
-                  # try:
-                  #   print(f"Setup 5-{ii+1}:")
-                  #   vl5, sr5 = main((n, k, n, c, d, w, null, 100000, 100000, False, True, True)) #gauss-exp-stimgen
+                  try:
+                    print(f"Setup 6-{ii+1}:")
+                    vl6, sr6 = main((n, k, n, c, d, w, null, 100000, 100000, False, True, False, False)) #gauss-exp-no stimgen
 
-                  #   sum_vague_lvls5 += vl5
-                  #   sum_success_rates5 += sr5
+                    sum_vague_lvls6 += vl6
+                    sum_success_rates6 += sr6
                     
-                  # except ValueError:
-                  #   print("==> Failed Setup 5")
-                  #   exit(0)
+                  except ValueError:
+                    print("==> Failed Setup 6")
+                    exit(0)
 
-                  # try:
-                  #   print(f"Setup 6-{ii+1}:")
-                  #   vl6, sr6 = main((n, k, n, c, d, w, null, 100000, 100000, False, True, False)) #gauss-exp-no stimgen
+                  try:
+                    print(f"Setup 7-{ii+1}:")
+                    vl7, sr7 = main((n, k, n, c, d, w, null, i, i, False, False, True, False)) #gauss-linear-stimgen
 
-                  #   sum_vague_lvls6 += vl6
-                  #   sum_success_rates6 += sr6
+                    sum_vague_lvls7 += vl7
+                    sum_success_rates7 += sr7
                     
-                  # except ValueError:
-                  #   print("==> Failed Setup 6")
-                  #   exit(0)
+                  except ValueError:
+                    print("==> Failed Setup 7")
+                    exit(0)
 
-                  # try:
-                  #   print(f"Setup 7-{ii+1}:")
-                  #   vl7, sr7 = main((n, k, n, c, d, w, null, i, i, False, False, True)) #gauss-linear-stimgen
+                  try:
+                    print(f"Setup 8-{ii+1}:")
+                    vl8, sr8 = main((n, k, n, c, d, w, null, i, i, False, False, False, False)) #gauss-linear-no stimgen
 
-                  #   sum_vague_lvls7 += vl7
-                  #   sum_success_rates7 += sr7
-                    
-                  # except ValueError:
-                  #   print("==> Failed Setup 7")
-                  #   exit(0)
+                    sum_vague_lvls8 += vl8
+                    sum_success_rates8 += sr8
 
-                  # try:
-                  #   print(f"Setup 8-{ii+1}:")
-                  #   vl8, sr8 = main((n, k, n, c, d, w, null, i, i, False, False, False)) #gauss-linear-no stimgen
-
-                  #   sum_vague_lvls8 += vl8
-                  #   sum_success_rates8 += sr8
-
-                  # except ValueError:
-                  #   print("==> Failed Setup 8")
-                  #   exit(0)
+                  except ValueError:
+                    print("==> Failed Setup 8")
+                    exit(0)
 
                 avg_vague_lvls[0].append(sum_vague_lvls1 / avg_i[fig])
                 success_rates[0].append(sum_success_rates1 / avg_i[fig])
                 print(f" => avg_vague_lvls1 = {sum_vague_lvls1 / avg_i[fig]}")
                 print(f" => success_rates1 = {sum_success_rates1 / avg_i[fig]}")
 
-                avg_vague_lvls[8].append(sum_vague_lvls1n / avg_i[fig])
-                success_rates[8].append(sum_success_rates1n / avg_i[fig])
-                print(f" => avg_vague_lvls1n = {sum_vague_lvls1n / avg_i[fig]}")
-                print(f" => success_rates1n = {sum_success_rates1n / avg_i[fig]}")
+                # avg_vague_lvls[8].append(sum_vague_lvls1n / avg_i[fig])
+                # success_rates[8].append(sum_success_rates1n / avg_i[fig])
+                # print(f" => avg_vague_lvls1n = {sum_vague_lvls1n / avg_i[fig]}")
+                # print(f" => success_rates1n = {sum_success_rates1n / avg_i[fig]}")
 
-                # avg_vague_lvls[1].append(sum_vague_lvls2 / avg_i[fig])
-                # success_rates[1].append(sum_success_rates2 / avg_i[fig])
-                # print(f" => avg_vague_lvls2 = {sum_vague_lvls2 / avg_i[fig]}")
-                # print(f" => success_rates2 = {sum_success_rates2 / avg_i[fig]}")
+                avg_vague_lvls[1].append(sum_vague_lvls2 / avg_i[fig])
+                success_rates[1].append(sum_success_rates2 / avg_i[fig])
+                print(f" => avg_vague_lvls2 = {sum_vague_lvls2 / avg_i[fig]}")
+                print(f" => success_rates2 = {sum_success_rates2 / avg_i[fig]}")
                 
                 avg_vague_lvls[2].append(sum_vague_lvls3 / avg_i[fig])
                 success_rates[2].append(sum_success_rates3 / avg_i[fig])
                 print(f" => avg_vague_lvls3 = {sum_vague_lvls3 / avg_i[fig]}")
                 print(f" => success_rates3 = {sum_success_rates3 / avg_i[fig]}")
 
-                avg_vague_lvls[9].append(sum_vague_lvls3n / avg_i[fig])
-                success_rates[9].append(sum_success_rates3n / avg_i[fig])
-                print(f" => avg_vague_lvls3n = {sum_vague_lvls3n / avg_i[fig]}")
-                print(f" => success_rates3n = {sum_success_rates3n / avg_i[fig]}")
+                # avg_vague_lvls[9].append(sum_vague_lvls3n / avg_i[fig])
+                # success_rates[9].append(sum_success_rates3n / avg_i[fig])
+                # print(f" => avg_vague_lvls3n = {sum_vague_lvls3n / avg_i[fig]}")
+                # print(f" => success_rates3n = {sum_success_rates3n / avg_i[fig]}")
                 
-                # avg_vague_lvls[3].append(sum_vague_lvls4 / avg_i[fig])
-                # success_rates[3].append(sum_success_rates4 / avg_i[fig])
-                # print(f" => avg_vague_lvls4 = {sum_vague_lvls4 / avg_i[fig]}")
-                # print(f" => success_rates4 = {sum_success_rates4 / avg_i[fig]}")
+                avg_vague_lvls[3].append(sum_vague_lvls4 / avg_i[fig])
+                success_rates[3].append(sum_success_rates4 / avg_i[fig])
+                print(f" => avg_vague_lvls4 = {sum_vague_lvls4 / avg_i[fig]}")
+                print(f" => success_rates4 = {sum_success_rates4 / avg_i[fig]}")
                 
-                # avg_vague_lvls[4].append(sum_vague_lvls5 / avg_i[fig])
-                # success_rates[4].append(sum_success_rates5 / avg_i[fig])
-                # print(f" => avg_vague_lvls5 = {sum_vague_lvls5 / avg_i[fig]}")
-                # print(f" => success_rates5 = {sum_success_rates5 / avg_i[fig]}")
+                avg_vague_lvls[4].append(sum_vague_lvls5 / avg_i[fig])
+                success_rates[4].append(sum_success_rates5 / avg_i[fig])
+                print(f" => avg_vague_lvls5 = {sum_vague_lvls5 / avg_i[fig]}")
+                print(f" => success_rates5 = {sum_success_rates5 / avg_i[fig]}")
                 
-                # avg_vague_lvls[5].append(sum_vague_lvls6 / avg_i[fig])
-                # success_rates[5].append(sum_success_rates6 / avg_i[fig])
-                # print(f" => avg_vague_lvls6 = {sum_vague_lvls6 / avg_i[fig]}")
-                # print(f" => success_rates6 = {sum_success_rates6 / avg_i[fig]}")
+                avg_vague_lvls[5].append(sum_vague_lvls6 / avg_i[fig])
+                success_rates[5].append(sum_success_rates6 / avg_i[fig])
+                print(f" => avg_vague_lvls6 = {sum_vague_lvls6 / avg_i[fig]}")
+                print(f" => success_rates6 = {sum_success_rates6 / avg_i[fig]}")
                 
-                # avg_vague_lvls[6].append(sum_vague_lvls7 / avg_i[fig])
-                # success_rates[6].append(sum_success_rates7 / avg_i[fig])
-                # print(f" => avg_vague_lvls7 = {sum_vague_lvls7 / avg_i[fig]}")
-                # print(f" => success_rates7 = {sum_success_rates7 / avg_i[fig]}")
+                avg_vague_lvls[6].append(sum_vague_lvls7 / avg_i[fig])
+                success_rates[6].append(sum_success_rates7 / avg_i[fig])
+                print(f" => avg_vague_lvls7 = {sum_vague_lvls7 / avg_i[fig]}")
+                print(f" => success_rates7 = {sum_success_rates7 / avg_i[fig]}")
                 
-                # avg_vague_lvls[7].append(sum_vague_lvls8 / avg_i[fig])
-                # success_rates[7].append(sum_success_rates8 / avg_i[fig])
-                # print(f" => avg_vague_lvls8 = {sum_vague_lvls8 / avg_i[fig]}")
-                # print(f" => success_rates8 = {sum_success_rates8 / avg_i[fig]}")
+                avg_vague_lvls[7].append(sum_vague_lvls8 / avg_i[fig])
+                success_rates[7].append(sum_success_rates8 / avg_i[fig])
+                print(f" => avg_vague_lvls8 = {sum_vague_lvls8 / avg_i[fig]}")
+                print(f" => success_rates8 = {sum_success_rates8 / avg_i[fig]}")
                 
     gen_comp_graph(fig+6, w_lst[fig], avg_vague_lvls, success_rates)
 

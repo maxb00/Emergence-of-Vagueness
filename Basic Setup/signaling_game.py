@@ -63,7 +63,7 @@ class SignalingGame:
 
     self.null_signal = null_signal
 
-    self.random = np.random.default_rng(0) # default seed = 0. Can be changed with set_random_seed()
+    self.random = np.random.default_rng() 
 
     self.sender = Sender(self.num_states, self.num_signals, null_signal)
     self.receiver = Receiver(self.num_signals, self.num_actions)
@@ -168,6 +168,7 @@ class SignalingGame:
       int: a new current state
     """
     return self.random.integers(self.num_states)
+    # return round(self.random.normal(self.num_states//2, 2))
   
   def update_history(self, reward: int):
     """Updates the history of simulations
