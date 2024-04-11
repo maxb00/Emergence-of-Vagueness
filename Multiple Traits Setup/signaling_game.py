@@ -72,8 +72,8 @@ class SignalingGame:
 
     self.random = np.random.default_rng() 
 
-    self.sender = Sender(self.num_states**self.num_traits, self.num_signals*self.num_traits, null_signal)
-    self.receiver = Receiver(self.num_signals*self.num_traits, self.num_actions**self.num_traits)
+    self.sender = Sender(self.num_states**self.num_traits, self.num_signals, null_signal)
+    self.receiver = Receiver(self.num_signals, self.num_actions**self.num_traits)
 
     self.curr_state = None
     self.curr_signal = None
@@ -140,20 +140,23 @@ class SignalingGame:
   #     else:
   #       return self.reward_param[0] - self.reward_param[1]*(m+1)*(self.num_states+z-self.num_signals)/(4*self.num_states)
     
-  # def info_measure(self, signal_prob) -> float:
-  #   prob = (signal_prob.T / np.sum(signal_prob, axis=1)).T
+  def info_measure(self, signal_prob) -> float:
+    total_states = self.num_states**self.num_traits
+    signal_prob = signal_prob.reshape(self.num_signals, total_states)
 
-  #   inf = 0
-  #   for i in range(self.num_signals):
-  #     if self.null_signal and i == self.num_signals:
-  #       break
-  #     inf_sig = 0
-  #     for j in range(self.num_states):
-  #       inf_sig += prob[i, j] * np.log(prob[i, j] * self.num_states)
+    prob = (signal_prob.T / np.sum(signal_prob, axis=1)).T
 
-  #     inf += (np.sum(signal_prob[i]) / self.num_states) * inf_sig
+    inf = 0
+    for i in range(self.num_signals):
+      if self.null_signal and i == self.num_signals:
+        break
+      inf_sig = 0
+      for j in range(total_states):
+        inf_sig += prob[i, j] * np.log(prob[i, j] * (total_states))
 
-  #   return inf
+      inf += (np.sum(signal_prob[i]) / (total_states)) * inf_sig
+
+    return inf
   
   # def optimal_info(self) -> float:
   #   opt_m = 2 * (self.reward_param[0] // self.reward_param[1]) + 1
@@ -255,9 +258,11 @@ class SignalingGame:
       #   self.receiver.print_action_prob()
 
     if record_interval == -1:
-      return
+      return self.info_measure(self.sender.signal_history[-1])
     
     gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
     
-    gen_gif(self.sender.signal_history, self.receiver.action_history, num_iter, record_interval, 100, gif_filename)
+    gen_gif(self.sender.signal_history, self.receiver.action_history, num_iter, record_interval, 100, gif_filename, self.info_measure)
+
+    return self.info_measure(self.sender.signal_history[-1])
   
