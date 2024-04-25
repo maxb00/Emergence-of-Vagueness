@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 from agents import Sender, Receiver
 from display import gen_gif
@@ -25,6 +26,25 @@ def linear_reward_fn(param: tuple[float, float], null_signal=False):
     return param[0] - param[1] * l2dist
   
   return get_reward
+
+def normpdf(x, mean, std):
+  var = float(std)**2
+  denom = (2*math.pi*var)**.5
+  num = math.exp(-(float(x)-float(mean))**2/(2*var))
+  return num/denom
+
+def gen_state_prob(num_states):
+  mean = (num_states-1) / 2
+  std = mean / 1.5
+
+  state_prob = np.array([[0] * num_states] * num_states, dtype=np.float64)
+  for i in range(num_states):
+    for j in range(num_states):
+      state_prob[i, j] = float(normpdf(i, mean, std) * normpdf(j, mean, std))
+
+  state_prob = state_prob / np.sum(state_prob)
+
+  return state_prob.flatten()
 
 
 class SignalingGame:
@@ -63,6 +83,8 @@ class SignalingGame:
     self.num_states = num_states
     self.num_signals = num_signals
     self.num_actions = num_actions
+
+    self.state_prob = gen_state_prob(num_states)
 
     self.reward_param = reward_param
 
@@ -144,19 +166,61 @@ class SignalingGame:
     total_states = self.num_states**self.num_traits
     signal_prob = signal_prob.reshape(self.num_signals, total_states)
 
-    prob = (signal_prob.T / np.sum(signal_prob, axis=1)).T
+    prob = np.zeros_like(signal_prob)
+    for i in range(self.num_signals):
+      for j in range(total_states):
+        prob[i, j] = signal_prob[i, j] * self.state_prob[j]
+    prob = (prob.T / np.sum(prob, axis=1)).T
 
     inf = 0
+    inf_sigs = []
     for i in range(self.num_signals):
       if self.null_signal and i == self.num_signals:
         break
       inf_sig = 0
       for j in range(total_states):
-        inf_sig += prob[i, j] * np.log(prob[i, j] * (total_states))
+        inf_sig += prob[i, j] * np.log(prob[i, j]/self.state_prob[j])
 
-      inf += (np.sum(signal_prob[i]) / (total_states)) * inf_sig
+      inf_sig = (np.sum(signal_prob[i]) / (total_states)) * inf_sig
 
-    return inf
+      inf_sigs.append(inf_sig)
+      inf += inf_sig
+
+    return inf, inf_sigs
+  
+  def info_measure_by_trait(self, signal_prob) -> float:
+    total_states = self.num_states**self.num_traits
+    signal_prob = signal_prob.reshape(self.num_signals, total_states)
+
+    prob_t1 = np.zeros((self.num_signals, self.num_states))
+    prob_t2 = np.zeros((self.num_signals, self.num_states))
+    state_prob_t = np.zeros(self.num_states)
+    for i in range(self.num_signals):
+      for j in range(total_states):
+        prob_t1[i, j%self.num_states] += signal_prob[i, j] * self.state_prob[j]
+        prob_t2[i, j//self.num_states] += signal_prob[i, j] * self.state_prob[j]
+        state_prob_t[j%self.num_states] += self.state_prob[j]
+    prob_t1 = (prob_t1.T / np.sum(prob_t1, axis=1)).T
+    prob_t2 = (prob_t2.T / np.sum(prob_t2, axis=1)).T
+    state_prob_t = state_prob_t / np.sum(state_prob_t)
+
+    inf_by_trait = [[], []]
+    for i in range(self.num_signals):
+      if self.null_signal and i == self.num_signals:
+        break
+      inf_sig_t1 = 0
+      inf_sig_t2 = 0
+      for j in range(self.num_states):
+        inf_sig_t1 += prob_t1[i, j] * np.log(prob_t1[i, j]/state_prob_t[j])
+        inf_sig_t2 += prob_t2[i, j] * np.log(prob_t2[i, j]/state_prob_t[j])
+
+      inf_sig_t1 = (np.sum(signal_prob[i]) / (total_states)) * inf_sig_t1
+      inf_sig_t2 = (np.sum(signal_prob[i]) / (total_states)) * inf_sig_t2
+
+      inf_by_trait[0].append(inf_sig_t1)
+      inf_by_trait[1].append(inf_sig_t2)
+
+    return inf_by_trait
   
   # def optimal_info(self) -> float:
   #   opt_m = 2 * (self.reward_param[0] // self.reward_param[1]) + 1
@@ -177,16 +241,9 @@ class SignalingGame:
     Returns:
       int: a new current state
     """
-    mean = self.num_states/2
-    std = mean/3
+    state = self.random.choice(self.num_states**self.num_traits, p=self.state_prob)
 
-    s = []
-    for _ in range(self.num_traits):
-      s.append(round(self.random.normal(mean, std)))
-      while s[-1] < 0 or s[-1] > self.num_states - 1:
-        s[-1] = round(self.random.normal(mean, std))
-    
-    return s
+    return self.unnumerize(state)
   
   def update_history(self, reward: int):
     """Updates the history of simulations
@@ -195,20 +252,20 @@ class SignalingGame:
       reward (int): the reward of the current simulation
     """
     self.history.append({"state": self.curr_state,
-                         "fstate": self.flatten_state(self.curr_state),
+                         "fstate": self.numerize(self.curr_state),
                          "signal": self.curr_signal,
                          "action": self.curr_action,
-                         "faction": self.flatten_state(self.curr_action),
+                         "faction": self.numerize(self.curr_action),
                          "reward": reward})
     
-  def flatten_state(self, state):
+  def numerize(self, state):
     fstate = 0
     for i, s in enumerate(state):
       fstate += s * (self.num_states**i)
 
     return fstate
   
-  def unflatten_action(self, action):
+  def unnumerize(self, action):
     ufaction = []
     while action > 0:
       ufaction.append(action % self.num_states)
@@ -230,14 +287,14 @@ class SignalingGame:
     for i in range(num_iter):
       state = self.gen_state()
       self.curr_state = state
-      state = self.flatten_state(state)
+      state = self.numerize(state)
       if record_interval > 0 and (i+1) % record_interval == 0:
         signal = self.sender.gen_signal(state, True)
         action = self.receiver.gen_action(signal, True)
       else:
         signal = self.sender.gen_signal(state)
         action = self.receiver.gen_action(signal)
-      action = self.unflatten_action(action)
+      action = self.unnumerize(action)
       self.curr_signal = signal
       self.curr_action = action
 
@@ -260,9 +317,9 @@ class SignalingGame:
     if record_interval == -1:
       return self.info_measure(self.sender.signal_history[-1])
     
-    gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
+    gif_filename = f"./simulations/v2/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
     
-    gen_gif(self.sender.signal_history, self.receiver.action_history, num_iter, record_interval, 100, gif_filename, self.info_measure)
+    gen_gif(self.sender.signal_history, self.receiver.action_history, num_iter, record_interval, 100, gif_filename, self.info_measure, self.info_measure_by_trait)
 
     return self.info_measure(self.sender.signal_history[-1])
   

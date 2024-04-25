@@ -5,7 +5,7 @@ import seaborn as sns
 from math import ceil
 import os
 
-def gen_gif(signal_history: list, action_history: list, num_iter: int, record_interval: int, duration: int, output_file: str, info_measure_fn):
+def gen_gif(signal_history: list, action_history: list, num_iter: int, record_interval: int, duration: int, output_file: str, info_measure_fn, info_measure_by_triat_fn):
   """Generates a heatmap gif of the whole simulation and saves it into 
   test.gif
 
@@ -19,29 +19,36 @@ def gen_gif(signal_history: list, action_history: list, num_iter: int, record_in
   if not os.path.exists("./images"):
     os.mkdir("images")
 
+  num_states = len(signal_history[0][0])
+  num_signals = len(action_history[0])
+
   ix = []
   # epy = []
   # optp_y = []
   infoy = []
+  for _ in range(num_signals):
+    infoy.append([])
   # opti_y = []
 
   for i in range(num_images):
-    width = len(signal_history[0][0])//2*len(action_history[0])+4
-    height = len(signal_history[0][0])+4
-
-    # fig, axs = plt.subplots(3, len(action_history[0]), figsize=(width, width*3//4))
-    # plt.tight_layout(pad=3)
+    width = num_states//2*num_signals+8
+    height = num_states+8
 
     fig = plt.figure(figsize=(width, height), constrained_layout=True)
-    gs = fig.add_gridspec(nrows=3, ncols=len(action_history[0]))
+    gs = fig.add_gridspec(nrows=4, ncols=num_signals)
 
     ix.append((i+1)*record_interval)
     # epy.append(ep_fn(signal_history[i], action_history[i]))
     # optp_y.append(opt_payoff)
-    infoy.append(info_measure_fn(signal_history[i]))
+    total_info, info = info_measure_fn(signal_history[i])
+    accum_info = 0
+    for sig in range(num_signals):
+      accum_info += info[sig]
+      infoy[sig].append(accum_info)
+
     # opti_y.append(opt_info)
 
-    for j in range(len(action_history[0])):
+    for j in range(num_signals):
 
       ax1 = fig.add_subplot(gs[0, j])
       sns.heatmap(signal_history[i][j], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, 
@@ -65,12 +72,37 @@ def gen_gif(signal_history: list, action_history: list, num_iter: int, record_in
     # axs[2].set_title("Expected payoff by rollout")
 
     ax3 = fig.add_subplot(gs[2, :])
-    ax3.plot(ix, infoy, label="current")
+    for sig in reversed(range(num_signals)):
+      ax3.plot(ix, infoy[sig], label=f"Signal {sig}")
+      ax3.fill_between(ix, infoy[sig])
     # axs[3].plot(ix, opti_y, label="optimal")
     ax3.legend(loc="upper left")
     ax3.set_xlabel("rollout")
     ax3.set_ylabel("info measure")
     ax3.set_title("Info measure by rollout")
+    
+    text = f"Total info measure: {total_info:.5f}\n"
+    text += "Info measure by signal: ["
+    for sig in range(num_signals):
+      text += f"{info[sig]:.5f}, "
+    text += "]\n"
+    info_by_trait = info_measure_by_triat_fn(signal_history[i])
+    text += f"Trait 1's info measure by signal: ["
+    for sig in range(num_signals):
+      text += f"{info_by_trait[0][sig]:.5f}, "
+    text += "]\n"
+    text += f"Trait 2's info measure by signal: ["
+    for sig in range(num_signals):
+      text += f"{info_by_trait[1][sig]:.5f}, "
+    text += "]"
+
+    ax4 = fig.add_subplot(gs[3, :])
+    ax4.axis("off")
+    ax4.annotate(text,
+            xy=(0, 0.05), xytext=(0, 10),
+            xycoords=('axes fraction', 'figure fraction'),
+            textcoords='offset points',
+            size=18, ha='left', va='bottom')
 
     fig.suptitle(f"Rollout {(i+1)*record_interval}")
     plt.savefig(f"./images/game_{(i+1)*record_interval}.png")
@@ -83,9 +115,9 @@ def gen_gif(signal_history: list, action_history: list, num_iter: int, record_in
   if not os.path.exists("./simulations"):
     os.mkdir("simulations")
   
-  subfolder = f"{len(signal_history[0][0])}_{len(action_history[0])}_{len(action_history[0][0])}"
-  if not os.path.exists(f"./simulations/{subfolder}"):
-    os.makedirs(f"simulations/{subfolder}/")
+  subfolder = f"{num_states}_{num_signals}_{num_states}"
+  if not os.path.exists(f"./simulations/v2/{subfolder}"):
+    os.makedirs(f"simulations/v2/{subfolder}/")
   
   imageio.mimsave(output_file, images, duration=duration)
 
