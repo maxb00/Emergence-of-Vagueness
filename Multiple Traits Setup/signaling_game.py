@@ -162,7 +162,7 @@ class SignalingGame:
   #     else:
   #       return self.reward_param[0] - self.reward_param[1]*(m+1)*(self.num_states+z-self.num_signals)/(4*self.num_states)
     
-  def info_measure(self, signal_prob) -> float:
+  def info_measure(self, signal_prob, weighted=True) -> float:
     total_states = self.num_states**self.num_traits
     signal_prob = signal_prob.reshape(self.num_signals, total_states)
 
@@ -181,14 +181,15 @@ class SignalingGame:
       for j in range(total_states):
         inf_sig += prob[i, j] * np.log(prob[i, j]/self.state_prob[j])
 
-      inf_sig = (np.sum(signal_prob[i]) / (total_states)) * inf_sig
+      if weighted:
+        inf_sig = (np.sum(signal_prob[i]) / (total_states)) * inf_sig
 
       inf_sigs.append(inf_sig)
       inf += inf_sig
 
     return inf, inf_sigs
   
-  def info_measure_by_trait(self, signal_prob) -> float:
+  def info_measure_by_trait(self, signal_prob, weighted=True) -> float:
     total_states = self.num_states**self.num_traits
     signal_prob = signal_prob.reshape(self.num_signals, total_states)
 
@@ -214,26 +215,35 @@ class SignalingGame:
         inf_sig_t1 += prob_t1[i, j] * np.log(prob_t1[i, j]/state_prob_t[j])
         inf_sig_t2 += prob_t2[i, j] * np.log(prob_t2[i, j]/state_prob_t[j])
 
-      inf_sig_t1 = (np.sum(signal_prob[i]) / (total_states)) * inf_sig_t1
-      inf_sig_t2 = (np.sum(signal_prob[i]) / (total_states)) * inf_sig_t2
+      if weighted:
+        inf_sig_t1 = (np.sum(signal_prob[i]) / (total_states)) * inf_sig_t1
+        inf_sig_t2 = (np.sum(signal_prob[i]) / (total_states)) * inf_sig_t2
 
       inf_by_trait[0].append(inf_sig_t1)
       inf_by_trait[1].append(inf_sig_t2)
 
     return inf_by_trait
   
-  # def optimal_info(self) -> float:
-  #   opt_m = 2 * (self.reward_param[0] // self.reward_param[1]) + 1
-  #   m_null = self.num_states - self.num_signals * opt_m
-  #   m = self.num_states // self.num_signals
-  #   z = self.num_states % self.num_signals
+  def optimal_info(self, weighted=True) -> float:
+    sv = 1e-7
+    lv = 1 - 3*sv
 
-  #   if self.null_signal and m_null > 0:
-  #     opt_info = opt_m/self.num_states * self.num_signals * np.log(self.num_states/opt_m)
-  #   else:
-  #     opt_info = np.log(self.num_states) - (z/self.num_signals)*np.log(m+1) - (1-z/self.num_signals)*np.log(m)
+    opt_strat = np.array([
+      [[lv, lv, sv],
+      [sv, lv, sv],
+      [sv, sv, sv]],
+      [[sv, sv, lv],
+      [sv, sv, lv],
+      [sv, sv, sv]],
+      [[sv, sv, sv],
+      [sv, sv, sv],
+      [sv, lv, lv]],
+      [[sv, sv, sv],
+      [lv, sv, sv],
+      [lv, sv, sv]]
+    ])
 
-  #   return opt_info
+    return self.info_measure(opt_strat, weighted)[0]
 
   def gen_state(self) -> int:
     """Generates a random (world) state
@@ -313,13 +323,14 @@ class SignalingGame:
       #   print("Action weights & probs:")
       #   print(self.receiver.action_weights)
       #   self.receiver.print_action_prob()
+        # print(self.optimal_info(False))
 
     if record_interval == -1:
       return self.info_measure(self.sender.signal_history[-1])
     
-    gif_filename = f"./simulations/v2/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
+    gif_filename = f"./simulations/v3/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}"
     
-    gen_gif(self.sender.signal_history, self.receiver.action_history, num_iter, record_interval, 100, gif_filename, self.info_measure, self.info_measure_by_trait)
+    gen_gif(self.sender.signal_history, self.receiver.action_history, num_iter, record_interval, 100, gif_filename, self.info_measure, self.optimal_info, self.info_measure_by_trait)
 
     return self.info_measure(self.sender.signal_history[-1])
   
