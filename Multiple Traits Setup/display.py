@@ -36,32 +36,33 @@ def gen_gif(signal_history: list, action_history: list, num_iter: int, record_in
   # opti_y = []
 
   for i in range(num_images):
-    width = num_states//2*num_signals+10
-    height = num_states+10
+    width = num_states//2*num_signals+20
+    height = num_states*2+20
 
     fig = plt.figure(figsize=(width, height), constrained_layout=True)
-    gs = fig.add_gridspec(nrows=4, ncols=num_signals)
+    gs = fig.add_gridspec(nrows=5, ncols=num_signals)
 
     ix.append((i+1)*record_interval)
     # epy.append(ep_fn(signal_history[i], action_history[i]))
     # optp_y.append(opt_payoff)
-    total_info, info = info_measure_fn(signal_history[i], False)
+    total_info, info_sig, info_state = info_measure_fn(signal_history[i], False)
     opt_info = opt_info_fn(False)
-    w_total_info, w_info = info_measure_fn(signal_history[i])
+    w_total_info, w_info_sig, w_info_state = info_measure_fn(signal_history[i])
     w_opt_info = opt_info_fn()
 
     accum_info = 0
     accum_w_info = 0
     for sig in range(num_signals):
-      accum_info += info[sig]
+      accum_info += info_sig[sig]
       infoy[sig].append(accum_info)
-      accum_w_info += w_info[sig]
+      accum_w_info += w_info_sig[sig]
       w_infoy[sig].append(accum_w_info)
     opt_infoy.append(opt_info)
     w_opt_infoy.append(w_opt_info)
 
     # opti_y.append(opt_info)
 
+    sns.set_theme(font_scale=2)
     for j in range(num_signals):
 
       ax1 = fig.add_subplot(gs[0, j])
@@ -71,7 +72,14 @@ def gen_gif(signal_history: list, action_history: list, num_iter: int, record_in
       ax1.set_ylabel("Trait 2")
       ax1.set_title(f"Sender\'s Signal {j}")
 
-      ax2 = fig.add_subplot(gs[1, j])
+      ax1 = fig.add_subplot(gs[1, j])
+      sns.heatmap(w_info_state[j], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, 
+      fmt=".2f", ax=ax1)
+      ax1.set_xlabel("Trait 1")
+      ax1.set_ylabel("Trait 2")
+      ax1.set_title(f"Signal {1}'s Info Measure")
+
+      ax2 = fig.add_subplot(gs[2, j])
       sns.heatmap(action_history[i][j], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, 
       fmt=".1f", ax=ax2)
       ax2.set_xlabel("Trait 1")
@@ -85,7 +93,7 @@ def gen_gif(signal_history: list, action_history: list, num_iter: int, record_in
     # axs[2].set_ylabel("expected payoff")
     # axs[2].set_title("Expected payoff by rollout")
 
-    ax3 = fig.add_subplot(gs[2, 0:2])
+    ax3 = fig.add_subplot(gs[3, 0:num_signals//2])
     # for sig in reversed(range(num_signals)):
     #   ax3.plot(ix, w_infoy[sig], label=f"Signal {sig}")
     #   ax3.fill_between(ix, w_infoy[sig])
@@ -96,7 +104,7 @@ def gen_gif(signal_history: list, action_history: list, num_iter: int, record_in
     ax3.set_ylabel("info measure")
     ax3.set_title("Unweighted info measure by rollout")
 
-    ax4 = fig.add_subplot(gs[2, 2:4])
+    ax4 = fig.add_subplot(gs[3, num_signals//2:num_signals])
     # for sig in reversed(range(num_signals)):
     #   ax3.plot(ix, w_infoy[sig], label=f"Signal {sig}")
     #   ax3.fill_between(ix, w_infoy[sig])
@@ -110,11 +118,11 @@ def gen_gif(signal_history: list, action_history: list, num_iter: int, record_in
     text = f"Total unweighted/weighted info measure: [{total_info:.5f}, {w_total_info:.5f}]\n"
     text += "Info measure by signal: ["
     for sig in range(num_signals):
-      text += f"{info[sig]:.5f}, "
+      text += f"{info_sig[sig]:.5f}, "
     text += "]\n"
     text += "Weighted info measure by signal: ["
     for sig in range(num_signals):
-      text += f"{w_info[sig]:.5f}, "
+      text += f"{w_info_sig[sig]:.5f}, "
     text += "]\n"
     info_by_trait = info_measure_by_triat_fn(signal_history[i], False)
     w_info_by_trait = info_measure_by_triat_fn(signal_history[i])
@@ -135,13 +143,13 @@ def gen_gif(signal_history: list, action_history: list, num_iter: int, record_in
       text += f"{w_info_by_trait[1][sig]:.5f}, "
     text += "]"
 
-    ax5 = fig.add_subplot(gs[3, :])
+    ax5 = fig.add_subplot(gs[4, :])
     ax5.axis("off")
     ax5.annotate(text,
-            xy=(0, 0.05), xytext=(0, 10),
+            xy=(0, 0.05), xytext=(0, 1),
             xycoords=('axes fraction', 'figure fraction'),
             textcoords='offset points',
-            size=18, ha='left', va='bottom')
+            size=30, ha='left', va='bottom')
 
     fig.suptitle(f"Rollout {(i+1)*record_interval}")
     plt.savefig(f"./images/game_{(i+1)*record_interval}.png")
@@ -155,15 +163,14 @@ def gen_gif(signal_history: list, action_history: list, num_iter: int, record_in
     os.mkdir("simulations")
   
   subfolder = f"{num_states}_{num_signals}_{num_states}"
-  if not os.path.exists(f"./simulations/v3/{subfolder}"):
-    os.makedirs(f"simulations/v3/{subfolder}/")
+  if not os.path.exists(f"./simulations/v4/{subfolder}"):
+    os.makedirs(f"simulations/v4/{subfolder}/")
   
   version = 1
   final_output_file = f"{output_file}"
   while os.path.isfile(f"{final_output_file}.gif"):
     final_output_file = f"{output_file}#{version}"
     version += 1
-  print(final_output_file)
   imageio.mimsave(f"{final_output_file}.gif", images, duration=duration)
 
 # f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"

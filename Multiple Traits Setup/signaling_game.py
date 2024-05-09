@@ -35,7 +35,7 @@ def normpdf(x, mean, std):
 
 def gen_state_prob(num_states):
   mean = (num_states-1) / 2
-  std = mean / 1.5
+  std = mean / 1.25
 
   state_prob = np.array([[0] * num_states] * num_states, dtype=np.float64)
   for i in range(num_states):
@@ -170,24 +170,35 @@ class SignalingGame:
     for i in range(self.num_signals):
       for j in range(total_states):
         prob[i, j] = signal_prob[i, j] * self.state_prob[j]
+    prob_sig = [np.sum(prob[i]) for i in range(self.num_signals)]
     prob = (prob.T / np.sum(prob, axis=1)).T
 
     inf = 0
     inf_sigs = []
+    inf_states = []
     for i in range(self.num_signals):
       if self.null_signal and i == self.num_signals:
         break
       inf_sig = 0
+      inf_states.append([])
       for j in range(total_states):
-        inf_sig += prob[i, j] * np.log(prob[i, j]/self.state_prob[j])
+        inf_state = prob[i, j] * np.log(prob[i, j]/self.state_prob[j])
+        inf_sig += inf_state
+        
+        if weighted:
+          inf_state = prob_sig[i] * inf_state
+
+        inf_states[i].append(inf_state)
 
       if weighted:
-        inf_sig = (np.sum(signal_prob[i]) / (total_states)) * inf_sig
+        inf_sig = prob_sig[i] * inf_sig
 
       inf_sigs.append(inf_sig)
       inf += inf_sig
 
-    return inf, inf_sigs
+    inf_states = np.resize(np.array(inf_states), (self.num_signals, self.num_states, self.num_states))
+
+    return inf, inf_sigs, inf_states
   
   def info_measure_by_trait(self, signal_prob, weighted=True) -> float:
     total_states = self.num_states**self.num_traits
@@ -201,6 +212,7 @@ class SignalingGame:
         prob_t1[i, j%self.num_states] += signal_prob[i, j] * self.state_prob[j]
         prob_t2[i, j//self.num_states] += signal_prob[i, j] * self.state_prob[j]
         state_prob_t[j%self.num_states] += self.state_prob[j]
+    prob_sig = [np.sum(prob_t1[i]) for i in range(self.num_signals)]
     prob_t1 = (prob_t1.T / np.sum(prob_t1, axis=1)).T
     prob_t2 = (prob_t2.T / np.sum(prob_t2, axis=1)).T
     state_prob_t = state_prob_t / np.sum(state_prob_t)
@@ -216,8 +228,8 @@ class SignalingGame:
         inf_sig_t2 += prob_t2[i, j] * np.log(prob_t2[i, j]/state_prob_t[j])
 
       if weighted:
-        inf_sig_t1 = (np.sum(signal_prob[i]) / (total_states)) * inf_sig_t1
-        inf_sig_t2 = (np.sum(signal_prob[i]) / (total_states)) * inf_sig_t2
+        inf_sig_t1 = prob_sig[i] * inf_sig_t1
+        inf_sig_t2 = prob_sig[i] * inf_sig_t2
 
       inf_by_trait[0].append(inf_sig_t1)
       inf_by_trait[1].append(inf_sig_t2)
@@ -229,19 +241,69 @@ class SignalingGame:
     lv = 1 - 3*sv
 
     opt_strat = np.array([
-      [[lv, lv, sv],
-      [sv, lv, sv],
-      [sv, sv, sv]],
-      [[sv, sv, lv],
-      [sv, sv, lv],
-      [sv, sv, sv]],
-      [[sv, sv, sv],
-      [sv, sv, sv],
-      [sv, lv, lv]],
-      [[sv, sv, sv],
-      [lv, sv, sv],
-      [lv, sv, sv]]
+      [[lv, lv, lv, sv, sv, sv],
+      [lv, lv, lv, sv, sv, sv],
+      [lv, lv, lv, sv, sv, sv],
+      [sv, sv, sv, sv, sv, sv],
+      [sv, sv, sv, sv, sv, sv],
+      [sv, sv, sv, sv, sv, sv]],
+      [[sv, sv, sv, lv, lv, lv],
+      [sv, sv, sv, lv, lv, lv],
+      [sv, sv, sv, lv, lv, lv],
+      [sv, sv, sv, sv, sv, sv],
+      [sv, sv, sv, sv, sv, sv],
+      [sv, sv, sv, sv, sv, sv]],
+      [[sv, sv, sv, sv, sv, sv],
+      [sv, sv, sv, sv, sv, sv],
+      [sv, sv, sv, sv, sv, sv],
+      [lv, lv, lv, sv, sv, sv],
+      [lv, lv, lv, sv, sv, sv],
+      [lv, lv, lv, sv, sv, sv]],
+      [[sv, sv, sv, sv, sv, sv],
+      [sv, sv, sv, sv, sv, sv],
+      [sv, sv, sv, sv, sv, sv],
+      [sv, sv, sv, lv, lv, lv],
+      [sv, sv, sv, lv, lv, lv],
+      [sv, sv, sv, lv, lv, lv]],
     ])
+    # if self.num_signals == 4:
+    #   lv = 1 - 3*sv
+
+    #   opt_strat = np.array([
+    #     [[lv, lv, sv],
+    #     [sv, sv, sv],
+    #     [sv, sv, sv]],
+    #     [[sv, sv, lv],
+    #     [sv, sv, lv],
+    #     [sv, sv, sv]],
+    #     [[sv, sv, sv],
+    #     [sv, sv, sv],
+    #     [sv, lv, lv]],
+    #     [[sv, sv, sv],
+    #     [lv, sv, sv],
+    #     [lv, sv, sv]],
+    #   ])
+    # elif self.num_signals == 5:
+    #   sv = 1e-7
+    #   lv = 1 - 4*sv
+
+    #   opt_strat = np.array([
+    #     [[lv, lv, sv],
+    #     [sv, sv, sv],
+    #     [sv, sv, sv]],
+    #     [[sv, sv, lv],
+    #     [sv, sv, lv],
+    #     [sv, sv, sv]],
+    #     [[sv, sv, sv],
+    #     [sv, sv, sv],
+    #     [sv, lv, lv]],
+    #     [[sv, sv, sv],
+    #     [lv, sv, sv],
+    #     [lv, sv, sv]],
+    #     [[sv, sv, sv],
+    #     [sv, sv, sv],
+    #     [sv, sv, sv]]
+    #   ])
 
     return self.info_measure(opt_strat, weighted)[0]
 
@@ -328,7 +390,7 @@ class SignalingGame:
     if record_interval == -1:
       return self.info_measure(self.sender.signal_history[-1])
     
-    gif_filename = f"./simulations/v3/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}"
+    gif_filename = f"./simulations/v4/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}"
     
     gen_gif(self.sender.signal_history, self.receiver.action_history, num_iter, record_interval, 100, gif_filename, self.info_measure, self.optimal_info, self.info_measure_by_trait)
 
