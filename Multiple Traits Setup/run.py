@@ -4,13 +4,13 @@ import math
 
 def run():
 
-  n_lst = [6]
-  k_lst = [4]
+  n_lst = [3]
+  k_lst = [4, 5]
   c = 1
-  d_lst = [0.3]
-  i = 5000
-  r = 125
-  repeat = 3
+  d_lst = [0.5]
+  i = 4000
+  r = 100
+  repeat = 5
 
   for n in n_lst:
     for k in k_lst:

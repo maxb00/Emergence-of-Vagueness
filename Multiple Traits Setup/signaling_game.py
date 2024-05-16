@@ -123,44 +123,333 @@ class SignalingGame:
     """
     return self.reward_fn(state, action)
   
-  # def expected_payoff(self, signal_prob, action_prob) -> float:
-  #   """Calculates the expected payoff given the probabilities of the Sender and the Receiver
+  def floor_strat(self):
+    sv = 1e-7
     
-  #   Args:
-  #     signal_prob (np.ndarray): signal probabilities
-  #     action_prob (np.ndarray): action probabilities
+    if self.num_states == 6:
+      siglv = 1 - 3*sv
+      actlv = 1 - 35*sv
 
-  #   Returns:
-  #     float: the expected payoff
-  #   """
-  #   ep = 0
-  #   for w in range(self.num_states):
-  #     epw = 0
-  #     for m in range(self.num_signals + (1 if self.null_signal else 0)):
-  #       eps = 0
-  #       for a in range(self.num_actions):
-  #         if not self.null_signal or m != self.num_signals:
-  #           eps += action_prob[m, a] * self.evaluate(w, a)
+      flr_sig = np.array([
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+      ])
 
-  #       epw += signal_prob[m, w] * eps
+      for i in range(self.num_states):
+        for j in range(self.num_states):
+          rand_sig = self.random.integers(self.num_signals)
+          flr_sig[rand_sig][i][j] = siglv
 
-  #     ep += epw
+      flr_act = np.array([
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, actlv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, actlv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, actlv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, actlv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+      ])
+    elif self.num_signals == 4:
+      siglv = 1 - 3*sv
+      actlv = 1 - 8*sv
 
-  #   return ep / self.num_states
+      flr_sig = np.array([
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, sv, sv]],
+      ])
 
-  # def optimal_payoff(self) -> float:
-  #   opt_bucket = 2 * (self.reward_param[0] // self.reward_param[1]) + 1
+      for i in range(self.num_states):
+        for j in range(self.num_states):
+          rand_sig = self.random.integers(self.num_signals)
+          flr_sig[rand_sig][i][j] = siglv
 
-  #   if self.null_signal and opt_bucket < self.num_states // self.num_signals:
-  #     return (self.reward_param[0]*opt_bucket - self.reward_param[1]*(opt_bucket**2-1)/4) * self.num_signals / self.num_states
-  #   else:
-  #     m = self.num_states // self.num_signals
-  #     z = self.num_states % self.num_signals
+      flr_act = np.array([
+        [[sv, sv, sv],
+        [sv, actlv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, actlv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, actlv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, actlv, sv],
+        [sv, sv, sv]],
+      ])
+    elif self.num_signals == 5:
+      siglv = 1 - 4*sv
+      actlv = 1 - 8*sv
 
-  #     if m % 2 == 0:
-  #       return self.reward_param[0] - self.reward_param[1]*m*(self.num_states+z)/(4*self.num_states)
-  #     else:
-  #       return self.reward_param[0] - self.reward_param[1]*(m+1)*(self.num_states+z-self.num_signals)/(4*self.num_states)
+      flr_sig = np.array([
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, sv, sv]]
+      ])
+
+      for i in range(self.num_states):
+        for j in range(self.num_states):
+          rand_sig = self.random.integers(self.num_signals)
+          flr_sig[rand_sig][i][j] = siglv
+
+      flr_act = np.array([
+        [[sv, sv, sv],
+        [sv, actlv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, actlv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, actlv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, actlv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, actlv, sv],
+        [sv, sv, sv]]
+      ])
+
+    return flr_sig, flr_act
+  
+  def optimal_strat(self):
+    sv = 1e-7
+    
+    if self.num_states == 6:
+      siglv = 1 - 3*sv
+      actlv = 1 - 35*sv
+
+      opt_sig = np.array([
+        [[siglv, siglv, siglv, sv, sv, sv],
+        [siglv, siglv, siglv, sv, sv, sv],
+        [siglv, siglv, siglv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+        [[sv, sv, sv, siglv, siglv, siglv],
+        [sv, sv, sv, siglv, siglv, siglv],
+        [sv, sv, sv, siglv, siglv, siglv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [siglv, siglv, siglv, sv, sv, sv],
+        [siglv, siglv, siglv, sv, sv, sv],
+        [siglv, siglv, siglv, sv, sv, sv]],
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, siglv, siglv, siglv],
+        [sv, sv, sv, siglv, siglv, siglv],
+        [sv, sv, sv, siglv, siglv, siglv]],
+      ])
+
+      opt_act = np.array([
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, actlv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, actlv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, actlv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+        [[sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, sv, sv],
+        [sv, sv, sv, sv, actlv, sv],
+        [sv, sv, sv, sv, sv, sv]],
+      ])
+    elif self.num_signals == 4:
+      siglv = 1 - 3*sv
+      actlv = 1 - 8*sv
+
+      opt_sig = np.array([
+        [[siglv, siglv, sv],
+        [sv, siglv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, siglv],
+        [sv, sv, siglv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, siglv, siglv]],
+        [[sv, sv, sv],
+        [siglv, sv, sv],
+        [siglv, sv, sv]],
+      ])
+
+      opt_act = np.array([
+        [[sv, sv, sv],
+        [sv, actlv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, actlv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, actlv, sv]],
+        [[sv, sv, sv],
+        [actlv, sv, sv],
+        [sv, sv, sv]],
+      ])
+    elif self.num_signals == 5:
+      siglv = 1 - 4*sv
+      actlv = 1 - 8*sv
+
+      opt_sig = np.array([
+        [[siglv, siglv, sv],
+        [sv, sv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, siglv],
+        [sv, sv, siglv]],
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, siglv, siglv]],
+        [[siglv, sv, sv],
+        [siglv, sv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, siglv, sv],
+        [sv, sv, sv]]
+      ])
+
+      opt_act = np.array([
+        [[sv, actlv, sv],
+        [sv, sv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, actlv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, sv, sv],
+        [sv, actlv, sv]],
+        [[sv, sv, sv],
+        [actlv, sv, sv],
+        [sv, sv, sv]],
+        [[sv, sv, sv],
+        [sv, actlv, sv],
+        [sv, sv, sv]]
+      ])
+
+    return opt_sig, opt_act
+  
+  def expected_payoff(self, signal_prob, action_prob) -> float:
+    """Calculates the expected payoff given the probabilities of the Sender and the Receiver
+    
+    Args:
+      signal_prob (np.ndarray): signal probabilities
+      action_prob (np.ndarray): action probabilities
+
+    Returns:
+      float: the expected payoff
+    """
+    total_states = self.num_states**self.num_traits
+    signal_prob = signal_prob.reshape(self.num_signals, total_states)
+    action_prob = action_prob.reshape(self.num_signals, total_states)
+
+    ep = 0
+    for w in range(total_states):
+      epw = 0
+      for m in range(self.num_signals + (1 if self.null_signal else 0)):
+        eps = 0
+        for a in range(total_states):
+          if not self.null_signal or m != self.num_signals:
+            state = self.unnumerize(w)
+            action = self.unnumerize(a)
+            eps += action_prob[m, a] * self.evaluate(state, action)
+
+        epw += signal_prob[m, w] * eps
+
+      ep += self.state_prob[w] * epw
+
+    return ep / total_states
+
+  def optimal_payoff(self) -> float:
+
+    opt_sig, opt_act = self.optimal_strat()
+
+    return self.expected_payoff(opt_sig, opt_act)
+  
+  def floor_payoff(self):
+
+    floor_sig, floor_act = self.floor_strat()
+
+    return self.expected_payoff(floor_sig, floor_act)
     
   def info_measure(self, signal_prob, weighted=True) -> float:
     total_states = self.num_states**self.num_traits
@@ -237,75 +526,14 @@ class SignalingGame:
     return inf_by_trait
   
   def optimal_info(self, weighted=True) -> float:
-    sv = 1e-7
-    lv = 1 - 3*sv
+    opt_sig, _ = self.optimal_strat()
 
-    opt_strat = np.array([
-      [[lv, lv, lv, sv, sv, sv],
-      [lv, lv, lv, sv, sv, sv],
-      [lv, lv, lv, sv, sv, sv],
-      [sv, sv, sv, sv, sv, sv],
-      [sv, sv, sv, sv, sv, sv],
-      [sv, sv, sv, sv, sv, sv]],
-      [[sv, sv, sv, lv, lv, lv],
-      [sv, sv, sv, lv, lv, lv],
-      [sv, sv, sv, lv, lv, lv],
-      [sv, sv, sv, sv, sv, sv],
-      [sv, sv, sv, sv, sv, sv],
-      [sv, sv, sv, sv, sv, sv]],
-      [[sv, sv, sv, sv, sv, sv],
-      [sv, sv, sv, sv, sv, sv],
-      [sv, sv, sv, sv, sv, sv],
-      [lv, lv, lv, sv, sv, sv],
-      [lv, lv, lv, sv, sv, sv],
-      [lv, lv, lv, sv, sv, sv]],
-      [[sv, sv, sv, sv, sv, sv],
-      [sv, sv, sv, sv, sv, sv],
-      [sv, sv, sv, sv, sv, sv],
-      [sv, sv, sv, lv, lv, lv],
-      [sv, sv, sv, lv, lv, lv],
-      [sv, sv, sv, lv, lv, lv]],
-    ])
-    # if self.num_signals == 4:
-    #   lv = 1 - 3*sv
+    return self.info_measure(opt_sig, weighted)[0]
+  
+  def floor_info(self, weighted=True) -> float:
+    floor_sig, _ = self.floor_strat()
 
-    #   opt_strat = np.array([
-    #     [[lv, lv, sv],
-    #     [sv, sv, sv],
-    #     [sv, sv, sv]],
-    #     [[sv, sv, lv],
-    #     [sv, sv, lv],
-    #     [sv, sv, sv]],
-    #     [[sv, sv, sv],
-    #     [sv, sv, sv],
-    #     [sv, lv, lv]],
-    #     [[sv, sv, sv],
-    #     [lv, sv, sv],
-    #     [lv, sv, sv]],
-    #   ])
-    # elif self.num_signals == 5:
-    #   sv = 1e-7
-    #   lv = 1 - 4*sv
-
-    #   opt_strat = np.array([
-    #     [[lv, lv, sv],
-    #     [sv, sv, sv],
-    #     [sv, sv, sv]],
-    #     [[sv, sv, lv],
-    #     [sv, sv, lv],
-    #     [sv, sv, sv]],
-    #     [[sv, sv, sv],
-    #     [sv, sv, sv],
-    #     [sv, lv, lv]],
-    #     [[sv, sv, sv],
-    #     [lv, sv, sv],
-    #     [lv, sv, sv]],
-    #     [[sv, sv, sv],
-    #     [sv, sv, sv],
-    #     [sv, sv, sv]]
-    #   ])
-
-    return self.info_measure(opt_strat, weighted)[0]
+    return self.info_measure(floor_sig, weighted)[0]
 
   def gen_state(self) -> int:
     """Generates a random (world) state
@@ -390,9 +618,9 @@ class SignalingGame:
     if record_interval == -1:
       return self.info_measure(self.sender.signal_history[-1])
     
-    gif_filename = f"./simulations/v4/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}"
+    gif_filename = f"./simulations/v5/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}"
     
-    gen_gif(self.sender.signal_history, self.receiver.action_history, num_iter, record_interval, 100, gif_filename, self.info_measure, self.optimal_info, self.info_measure_by_trait)
+    gen_gif(self, num_iter, record_interval, 100, gif_filename)
 
     return self.info_measure(self.sender.signal_history[-1])
   
