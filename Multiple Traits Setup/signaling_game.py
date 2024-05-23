@@ -37,10 +37,14 @@ def gen_state_prob(num_states):
   mean = (num_states-1) / 2
   std = mean / 1.25
 
-  state_prob = np.array([[0] * num_states] * num_states, dtype=np.float64)
+  # state_prob = np.array([[0] * num_states] * num_states, dtype=np.float64)
+  state_prob = np.array([[[0] * num_states] * num_states] * num_states, dtype=np.float64)
   for i in range(num_states):
     for j in range(num_states):
-      state_prob[i, j] = float(normpdf(i, mean, std) * normpdf(j, mean, std))
+      # state_prob[i, j] = float(normpdf(i, mean, std) * normpdf(j, mean, std))
+
+      for k in range(num_states):
+        state_prob[i, j, k] = float(normpdf(i, mean, std) * normpdf(j, mean, std) * normpdf(k, mean, std))
 
   state_prob = state_prob / np.sum(state_prob)
 
@@ -338,30 +342,30 @@ class SignalingGame:
       actlv = 1 - 8*sv
 
       opt_sig = np.array([
-        [[siglv, siglv, sv],
-        [sv, siglv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, siglv],
-        [sv, sv, siglv],
+        [[siglv, siglv, siglv],
+        [sv, sv, sv],
         [sv, sv, sv]],
         [[sv, sv, sv],
-        [sv, sv, sv],
-        [sv, siglv, siglv]],
+        [sv, sv, siglv],
+        [sv, sv, siglv]],
+        [[sv, sv, sv],
+        [sv, siglv, sv],
+        [sv, siglv, sv]],
         [[sv, sv, sv],
         [siglv, sv, sv],
         [siglv, sv, sv]],
       ])
 
       opt_act = np.array([
-        [[sv, sv, sv],
-        [sv, actlv, sv],
+        [[sv, actlv, sv],
+        [sv, sv, sv],
         [sv, sv, sv]],
         [[sv, sv, sv],
         [sv, sv, actlv],
         [sv, sv, sv]],
         [[sv, sv, sv],
-        [sv, sv, sv],
-        [sv, actlv, sv]],
+        [sv, actlv, sv],
+        [sv, sv, sv]],
         [[sv, sv, sv],
         [actlv, sv, sv],
         [sv, sv, sv]],
@@ -485,7 +489,7 @@ class SignalingGame:
       inf_sigs.append(inf_sig)
       inf += inf_sig
 
-    inf_states = np.resize(np.array(inf_states), (self.num_signals, self.num_states, self.num_states))
+    inf_states = np.resize(np.array(inf_states), (self.num_signals, self.num_states, self.num_states, self.num_states))
 
     return inf, inf_sigs, inf_states
   
@@ -613,14 +617,33 @@ class SignalingGame:
       #   print("Action weights & probs:")
       #   print(self.receiver.action_weights)
       #   self.receiver.print_action_prob()
-        # print(self.optimal_info(False))
+      #   print(self.optimal_info(False))
 
-    if record_interval == -1:
-      return self.info_measure(self.sender.signal_history[-1])
+    # if record_interval == -1:
+    #   return self.info_measure(self.sender.signal_history[-1])
     
-    gif_filename = f"./simulations/v5/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}"
-    
-    gen_gif(self, num_iter, record_interval, 100, gif_filename)
+    gif_filename = f"./simulations/v6/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}"
 
-    return self.info_measure(self.sender.signal_history[-1])
+    _, _, info_state = self.info_measure(self.sender.signal_history[-1], False)
+    _, _, w_info_state = self.info_measure(self.sender.signal_history[-1])
+
+    info_by_state_t1 = [np.sum(info_state[:, :, :, i]) for i in range(self.num_states)]
+    info_by_state_t2 = [np.sum(info_state[:, :, i, :]) for i in range(self.num_states)]
+    info_by_state_t3 = [np.sum(info_state[:, i, :, :]) for i in range(self.num_states)]
+
+    # print(f"Unweighted trait 1's low|medium|high: {info_by_state_t1[0]:.5f} | {info_by_state_t1[1]:.5f} | {info_by_state_t1[2]:.5f}")
+    # print(f"Unweighted trait 2's low|medium|high: {info_by_state_t2[0]:.5f} | {info_by_state_t2[1]:.5f} | {info_by_state_t2[2]:.5f}")
+    # print(f"Unweighted trait 3's low|medium|high: {info_by_state_t3[0]:.5f} | {info_by_state_t3[1]:.5f} | {info_by_state_t3[2]:.5f}")
+
+    w_info_by_state_t1 = [np.sum(w_info_state[:, :, :, i]) for i in range(self.num_states)]
+    w_info_by_state_t2 = [np.sum(w_info_state[:, :, i, :]) for i in range(self.num_states)]
+    w_info_by_state_t3 = [np.sum(w_info_state[:, i, :, :]) for i in range(self.num_states)]
+
+    # print(f"Weighted trait 1's low|medium|high: {w_info_by_state_t1[0]:.5f} | {w_info_by_state_t1[1]:.5f} | {w_info_by_state_t1[2]:.5f}")
+    # print(f"Weighted trait 2's low|medium|high: {w_info_by_state_t2[0]:.5f} | {w_info_by_state_t2[1]:.5f} | {w_info_by_state_t2[2]:.5f}")
+    # print(f"Weighted trait 3's low|medium|high: {w_info_by_state_t3[0]:.5f} | {w_info_by_state_t3[1]:.5f} | {w_info_by_state_t3[2]:.5f}")
+    
+    # gen_gif(self, num_iter, record_interval, 100, gif_filename)
+
+    return (info_by_state_t1, info_by_state_t2, info_by_state_t3, w_info_by_state_t1, w_info_by_state_t2, w_info_by_state_t3)
   

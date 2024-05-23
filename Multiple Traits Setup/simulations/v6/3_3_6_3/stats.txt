@@ -1,0 +1,6 @@
+Unweighted trait 1's low|medium|high: 3.95708 | 3.22190 | 3.19078
+Unweighted trait 2's low|medium|high: 3.48739 | 3.23422 | 3.64815
+Unweighted trait 3's low|medium|high: 3.60756 | 3.38782 | 3.37438
+Weighted trait 1's low|medium|high: 0.32290 | 0.57985 | 0.31639
+Weighted trait 2's low|medium|high: 0.32226 | 0.57774 | 0.31914
+Weighted trait 3's low|medium|high: 0.31821 | 0.59181 | 0.30912

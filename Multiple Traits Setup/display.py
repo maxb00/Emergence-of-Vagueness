@@ -33,10 +33,6 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
   opt_info = game.optimal_info(False)
   w_opt_info = game.optimal_info()
 
-  print(flr_info)
-  print(opt_info)
-  exit(0)
-
   ix = []
   exp_py = []
   flr_py = []
@@ -54,8 +50,8 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
   # opti_y = []
 
   for i in range(num_images):
-    width = num_states//2*num_signals+28
-    height = num_states*2+28
+    width = num_states//2*num_signals+32
+    height = num_states*2+32
 
     fig = plt.figure(figsize=(width, height), constrained_layout=True)
     gs = fig.add_gridspec(nrows=5, ncols=num_signals * 3)
@@ -101,7 +97,7 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
       fmt=".2f", ax=ax6)
       ax6.set_xlabel("Trait 1")
       ax6.set_ylabel("Trait 2")
-      ax6.set_title(f"Signal {j}'s Info Measure")
+      ax6.set_title(f"Signal {j}'s UW Info Measure")
 
       ax2 = fig.add_subplot(gs[2, j*3:j*3+3])
       sns.heatmap(action_history[i][j], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, 
@@ -191,12 +187,24 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
     w_info_middle = (np.sum(w_info_state[:, 0, 1]) + np.sum(w_info_state[:, 1, 2]) + np.sum(w_info_state[:, 1, 0]) + np.sum(w_info_state[:, 2, 1]))/4
     w_info_center = np.sum(w_info_state[:, 1, 1])
 
-    text += f"Weighted corner|middle|center: {w_info_corner:.5f} | {w_info_middle:.5f} | {w_info_center:.5f}"
+    text += f"Weighted corner|middle|center: {w_info_corner:.5f} | {w_info_middle:.5f} | {w_info_center:.5f}\n"
+
+    info_by_state_t1 = [np.sum(info_state[:, :, i]) for i in range(game.num_states)]
+    info_by_state_t2 = [np.sum(info_state[:, i, :]) for i in range(game.num_states)]
+
+    text += f"Unweighted trait 1's low|medium|high: {info_by_state_t1[0]:.5f} | {info_by_state_t1[1]:.5f} | {info_by_state_t1[2]:.5f}"
+    text += f" and trait 2's low|medium|high: {info_by_state_t2[0]:.5f} | {info_by_state_t2[1]:.5f} | {info_by_state_t2[2]:.5f}\n"
+
+    w_info_by_state_t1 = [np.sum(w_info_state[:, :, i]) for i in range(game.num_states)]
+    w_info_by_state_t2 = [np.sum(w_info_state[:, i, :]) for i in range(game.num_states)]
+
+    text += f"Weighted trait 1's low|medium|high: {w_info_by_state_t1[0]:.5f} | {w_info_by_state_t1[1]:.5f} | {w_info_by_state_t1[2]:.5f}"
+    text += f" and trait 2's low|medium|high: {w_info_by_state_t2[0]:.5f} | {w_info_by_state_t2[1]:.5f} | {w_info_by_state_t2[2]:.5f}"
 
     ax5 = fig.add_subplot(gs[4, :])
     ax5.axis("off")
     ax5.annotate(text,
-            xy=(0, 0.05), xytext=(0, -20),
+            xy=(0, 0.05), xytext=(0, -40),
             xycoords=('axes fraction', 'figure fraction'),
             textcoords='offset points',
             size=34, ha='left', va='bottom')
@@ -213,8 +221,8 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
     os.mkdir("simulations")
   
   subfolder = f"{num_states}_{num_signals}_{num_states}"
-  if not os.path.exists(f"./simulations/v5/{subfolder}"):
-    os.makedirs(f"simulations/v5/{subfolder}/")
+  if not os.path.exists(f"./simulations/v6/{subfolder}"):
+    os.makedirs(f"simulations/v6/{subfolder}/")
   
   version = 1
   final_output_file = f"{output_file}"

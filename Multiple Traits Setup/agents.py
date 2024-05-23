@@ -63,7 +63,8 @@ class Sender:
     self.curr_signal = signal
 
     if record:
-      self.signal_history.append(np.resize(prob, (self.num_signals, round(np.sqrt(self.num_states)), round(np.sqrt(self.num_states)))))
+      # self.signal_history.append(np.resize(prob, (self.num_signals, round(np.sqrt(self.num_states)), round(np.sqrt(self.num_states)))))
+      self.signal_history.append(np.resize(prob, (self.num_signals, 3, 3, 3)))
 
     return signal
   
@@ -160,7 +161,7 @@ class Receiver:
     self.curr_action = action
 
     if record:
-      self.action_history.append(np.resize(prob.T, (self.num_signals, round(np.sqrt(self.num_actions)), round(np.sqrt(self.num_actions)))))
+      self.action_history.append(np.resize(prob.T, (self.num_signals, 3, 3, 3)))
 
     return action
   
