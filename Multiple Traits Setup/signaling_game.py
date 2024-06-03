@@ -8,8 +8,7 @@ def linear_reward_fn(param: tuple[float, float], null_signal=False):
   """Returns a linear reward function based on the distance between the state and the action
 
   Args:
-    param (tuple[float, float]): the two parameters to be used as constants in the
-      reward function
+    param (tuple[float, float]): the two parameters to be used as constants in the reward function
     null_signal (boolean): null signal case
 
   Returns:
@@ -27,24 +26,42 @@ def linear_reward_fn(param: tuple[float, float], null_signal=False):
   
   return get_reward
 
-def normpdf(x, mean, std):
+def normpdf(x: float, mean: float, std: float) -> float:
+  """Returns the probability of a variable in a normal distribution given the mean and standard deviation
+
+  Args:
+    x (float): the variable
+    mean (float): the mean
+    std (float): the standard deviation
+
+  Returns:
+    float: the probability
+  """
   var = float(std)**2
   denom = (2*math.pi*var)**.5
   num = math.exp(-(float(x)-float(mean))**2/(2*var))
   return num/denom
 
-def gen_state_prob(num_states):
+def gen_state_prob(num_traits: int, num_states: int):
+  """Returns the probability matrix of the states of the game
+
+  Args:
+    num_traits (int): the number of traits
+    num_states (int): the number of states per trait
+  
+  Returns:
+    np.ndarray: the probability matrix (flattened)
+  """
   mean = (num_states-1) / 2
   std = mean / 1.25
 
-  # state_prob = np.array([[0] * num_states] * num_states, dtype=np.float64)
-  state_prob = np.array([[[0] * num_states] * num_states] * num_states, dtype=np.float64)
-  for i in range(num_states):
-    for j in range(num_states):
-      # state_prob[i, j] = float(normpdf(i, mean, std) * normpdf(j, mean, std))
-
-      for k in range(num_states):
-        state_prob[i, j, k] = float(normpdf(i, mean, std) * normpdf(j, mean, std) * normpdf(k, mean, std))
+  state_prob = np.zeros(tuple([num_states] * num_traits), dtype=np.float64)
+  for inds in np.ndindex(state_prob.shape):
+    prob = 1
+    for ind in inds:
+      prob *= normpdf(ind, mean, std)
+    
+    state_prob[inds] = prob
 
   state_prob = state_prob / np.sum(state_prob)
 
@@ -58,8 +75,8 @@ class SignalingGame:
   Implements a linear reward function based on the distance between the current state and the current action.
 
   Attributes:
-    num_states, num_signals, num_actions (int): the number of (world) states,
-      signals, and actions
+    num_traits, num_states, num_signals, num_actions (int): the number of       
+      traits, (world) states, signals, and actions
     reward_param (tuple[float, float]): the reward parameters
     reward_fn (function): the reward function
     null_signal (boolean): null signal case
@@ -76,6 +93,7 @@ class SignalingGame:
     """Initalizes the instances to set up the game
 
     Args:
+      num_traits (int): the number of traits
       num_states (int): the number of (world) states
       num_signals (int): the number of signals
       num_actions (int): the number of actions
@@ -98,8 +116,8 @@ class SignalingGame:
 
     self.random = np.random.default_rng() 
 
-    self.sender = Sender(self.num_states**self.num_traits, self.num_signals, null_signal)
-    self.receiver = Receiver(self.num_signals, self.num_actions**self.num_traits)
+    self.sender = Sender(self.num_traits, self.num_states, self.num_signals, null_signal)
+    self.receiver = Receiver(self.num_traits, self.num_signals, self.num_actions)
 
     self.curr_state = None
     self.curr_signal = None
@@ -127,7 +145,9 @@ class SignalingGame:
     """
     return self.reward_fn(state, action)
   
+  # HARD_CODED
   def floor_strat(self):
+    """Floor strategies for comparison purposes"""
     sv = 1e-7
     
     if self.num_states == 6:
@@ -277,7 +297,9 @@ class SignalingGame:
 
     return flr_sig, flr_act
   
+  # HARD_CODED
   def optimal_strat(self):
+    """Optimal strategies for comparison purposes"""
     sv = 1e-7
     
     if self.num_states == 6:
@@ -444,18 +466,32 @@ class SignalingGame:
     return ep / total_states
 
   def optimal_payoff(self) -> float:
+    """Calculates the optimal payoff"""
 
     opt_sig, opt_act = self.optimal_strat()
 
     return self.expected_payoff(opt_sig, opt_act)
   
   def floor_payoff(self):
+    """Calculates the floor payoff"""
 
     floor_sig, floor_act = self.floor_strat()
 
     return self.expected_payoff(floor_sig, floor_act)
-    
+  
+  # HARD_CODED FOR SOME NUMBER OF TRAITS (Line 528: np.resize line)
   def info_measure(self, signal_prob, weighted=True) -> float:
+    """Calculates the information content of the signals
+
+    Args:
+      signal_prob (np.ndarray): the probabilities of the signals
+      weighted (boolean): weighted/unweighted options
+
+    Returns:
+      inf (float): total information content measure
+      inf_sigs (list): information content by signal
+      inf_states (list): information content by state
+    """
     total_states = self.num_states**self.num_traits
     signal_prob = signal_prob.reshape(self.num_signals, total_states)
 
@@ -493,7 +529,17 @@ class SignalingGame:
 
     return inf, inf_sigs, inf_states
   
+  # HARD_CODED FOR 2 TRAITS
   def info_measure_by_trait(self, signal_prob, weighted=True) -> float:
+    """Calculates the information content by trait
+
+    Args:
+      signal_prob (np.ndarray): the probabilities of the signals
+      weighted (boolean): weighted/unweighted options
+
+    Returns:
+      inf_by_trait (list): information content by trait
+    """
     total_states = self.num_states**self.num_traits
     signal_prob = signal_prob.reshape(self.num_signals, total_states)
 
@@ -530,11 +576,15 @@ class SignalingGame:
     return inf_by_trait
   
   def optimal_info(self, weighted=True) -> float:
+    """Calculates the total information content for the optimal strategy"""
+
     opt_sig, _ = self.optimal_strat()
 
     return self.info_measure(opt_sig, weighted)[0]
   
   def floor_info(self, weighted=True) -> float:
+    """Calculates the total information content for the floor strategy"""
+
     floor_sig, _ = self.floor_strat()
 
     return self.info_measure(floor_sig, weighted)[0]
@@ -543,7 +593,7 @@ class SignalingGame:
     """Generates a random (world) state
 
     Returns:
-      int: a new current state
+      int: a new current state (unflattened)
     """
     state = self.random.choice(self.num_states**self.num_traits, p=self.state_prob)
 
@@ -562,20 +612,25 @@ class SignalingGame:
                          "faction": self.numerize(self.curr_action),
                          "reward": reward})
     
-  def numerize(self, state):
+  def numerize(self, state) -> int:
+    """Turn a state/action from an nd array to a number"""
     fstate = 0
     for i, s in enumerate(state):
       fstate += s * (self.num_states**i)
 
     return fstate
   
-  def unnumerize(self, action):
+  # NOTE: .insert(0, ...) makes more sense than .append() here but for some reason .append() gives the wanted results while .insert() does not???
+  def unnumerize(self, action: int):
+    """Turn a numerized state/action into an nd array"""
     ufaction = []
     while action > 0:
+      # Not sure why this isn't .insert(0, ...)?
       ufaction.append(action % self.num_states)
       action = action // self.num_states
 
     while len(ufaction) < self.num_traits:
+      # Same comment as above about using .insert(0, ...)?
       ufaction.append(0)
 
     return ufaction
@@ -607,8 +662,6 @@ class SignalingGame:
       self.sender.update(self.history[-1])
       self.receiver.update(self.history[-1])
 
-      # print(self.history[-1])
-
       # if i == num_iter - 1:
       #   print(f"game={self.history[-1]}")
       #   print("Signal weights & probs:")
@@ -621,9 +674,8 @@ class SignalingGame:
 
     # if record_interval == -1:
     #   return self.info_measure(self.sender.signal_history[-1])
-    
-    gif_filename = f"./simulations/v6/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}"
 
+    """ TESTING: Info content by rows/columns in 3D """
     _, _, info_state = self.info_measure(self.sender.signal_history[-1], False)
     _, _, w_info_state = self.info_measure(self.sender.signal_history[-1])
 
@@ -642,8 +694,10 @@ class SignalingGame:
     # print(f"Weighted trait 1's low|medium|high: {w_info_by_state_t1[0]:.5f} | {w_info_by_state_t1[1]:.5f} | {w_info_by_state_t1[2]:.5f}")
     # print(f"Weighted trait 2's low|medium|high: {w_info_by_state_t2[0]:.5f} | {w_info_by_state_t2[1]:.5f} | {w_info_by_state_t2[2]:.5f}")
     # print(f"Weighted trait 3's low|medium|high: {w_info_by_state_t3[0]:.5f} | {w_info_by_state_t3[1]:.5f} | {w_info_by_state_t3[2]:.5f}")
-    
-    # gen_gif(self, num_iter, record_interval, 100, gif_filename)
 
     return (info_by_state_t1, info_by_state_t2, info_by_state_t3, w_info_by_state_t1, w_info_by_state_t2, w_info_by_state_t3)
+  
+    # gif_filename = f"./simulations/v6/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}" #HARD-CODED
+  
+    # gen_gif(self, num_iter, record_interval, 100, gif_filename)
   

@@ -33,32 +33,29 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
   opt_info = game.optimal_info(False)
   w_opt_info = game.optimal_info()
 
-  ix = []
-  exp_py = []
-  flr_py = []
-  opt_py = []
-  infoy = []
-  flr_infoy = []
-  w_flr_infoy = []
-  opt_infoy = []
-  w_infoy = []
-  w_opt_infoy = []
+  ix = [] # x coordinates (1, 2, ...)
+  exp_py = [] # expected payoff
+  flr_py = [] # floor payoff
+  opt_py = [] # optimal payoff
+  infoy = [] # info
+  flr_infoy = [] # floor info
+  opt_infoy = [] # optimal info
+  w_infoy = [] # weighted info
+  w_flr_infoy = [] # weighted floor info
+  w_opt_infoy = [] # weighted optimal info
 
-  for _ in range(num_signals):
+  for _ in range(num_signals): # used for old feature, could delete?
     infoy.append([])
     w_infoy.append([])
-  # opti_y = []
 
   for i in range(num_images):
-    width = num_states//2*num_signals+32
-    height = num_states*2+32
+    width = num_states//2*num_signals+32 # HARD-CODED
+    height = num_states*2+32 # HARD-CODED
 
     fig = plt.figure(figsize=(width, height), constrained_layout=True)
     gs = fig.add_gridspec(nrows=5, ncols=num_signals * 3)
 
     ix.append((i+1)*record_interval)
-    # epy.append(ep_fn(signal_history[i], action_history[i]))
-    # optp_y.append(opt_payoff)
     exp_py.append(game.expected_payoff(signal_history[i], action_history[i]))
     flr_py.append(flr_p)
     opt_py.append(opt_p)
@@ -67,7 +64,7 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
     
     w_total_info, w_info_sig, w_info_state = game.info_measure(signal_history[i])
     
-
+    # used for old feature, could delete?
     accum_info = 0
     accum_w_info = 0
     for sig in range(num_signals):
@@ -80,75 +77,75 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
     opt_infoy.append(opt_info)
     w_opt_infoy.append(w_opt_info)
 
-    # opti_y.append(opt_info)
-
     sns.set_theme(font_scale=2)
     for j in range(num_signals):
 
-      ax1 = fig.add_subplot(gs[0, j*3:j*3+3])
+      # sender strategy heatmap
+      sender_heatmap_plot = fig.add_subplot(gs[0, j*3:j*3+3])
       sns.heatmap(signal_history[i][j], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, 
-      fmt=".1f", ax=ax1)
-      ax1.set_xlabel("Trait 1")
-      ax1.set_ylabel("Trait 2")
-      ax1.set_title(f"Sender\'s Signal {j}")
+      fmt=".1f", ax=sender_heatmap_plot)
+      sender_heatmap_plot.set_xlabel("Trait 1")
+      sender_heatmap_plot.set_ylabel("Trait 2")
+      sender_heatmap_plot.set_title(f"Sender\'s Signal {j}")
 
-      ax6 = fig.add_subplot(gs[1, j*3:j*3+3])
+      # info by state heatmap
+      info_by_state_plot = fig.add_subplot(gs[1, j*3:j*3+3])
       sns.heatmap(info_state[j], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, 
-      fmt=".2f", ax=ax6)
-      ax6.set_xlabel("Trait 1")
-      ax6.set_ylabel("Trait 2")
-      ax6.set_title(f"Signal {j}'s UW Info Measure")
+      fmt=".2f", ax=info_by_state_plot)
+      info_by_state_plot.set_xlabel("Trait 1")
+      info_by_state_plot.set_ylabel("Trait 2")
+      info_by_state_plot.set_title(f"Signal {j}'s UW Info Measure")
 
-      ax2 = fig.add_subplot(gs[2, j*3:j*3+3])
+      # receiver strategy heatmap
+      receiver_heatmap_plot = fig.add_subplot(gs[2, j*3:j*3+3])
       sns.heatmap(action_history[i][j], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, 
-      fmt=".1f", ax=ax2)
-      ax2.set_xlabel("Trait 1")
-      ax2.set_ylabel("Trait 2")
-      ax2.set_title(f"Receiver\'s Signal {j}")
+      fmt=".1f", ax=receiver_heatmap_plot)
+      receiver_heatmap_plot.set_xlabel("Trait 1")
+      receiver_heatmap_plot.set_ylabel("Trait 2")
+      receiver_heatmap_plot.set_title(f"Receiver\'s Signal {j}")
 
-    # axs[2].plot(ix, epy, label="expected")
-    # axs[2].plot(ix, optp_y, label="optimal")
-    # axs[2].legend(loc="upper left")
-    # axs[2].set_xlabel("rollout")
-    # axs[2].set_ylabel("expected payoff")
-    # axs[2].set_title("Expected payoff by rollout")
-
-    ax3 = fig.add_subplot(gs[3, 0:num_signals])
+    # info measure plot
+    info_plot = fig.add_subplot(gs[3, 0:num_signals])
     # for sig in reversed(range(num_signals)):
     #   ax3.plot(ix, w_infoy[sig], label=f"Signal {sig}")
     #   ax3.fill_between(ix, w_infoy[sig])
-    ax3.plot(ix, infoy[-1], label="Unweighted")
-    ax3.plot(ix, flr_infoy, label="Floor unweighted")
-    ax3.plot(ix, opt_infoy, label="Optimal unweighted")
-    ax3.legend(loc="upper left")
-    ax3.set_xlabel("rollout")
-    ax3.set_ylabel("info measure")
-    ax3.set_title("Unweighted info measure by rollout")
+    info_plot.plot(ix, infoy[-1], label="Unweighted")
+    info_plot.plot(ix, flr_infoy, label="Floor unweighted")
+    info_plot.plot(ix, opt_infoy, label="Optimal unweighted")
+    info_plot.legend(loc="upper left")
+    info_plot.set_xlabel("rollout")
+    info_plot.set_ylabel("info measure")
+    info_plot.set_title("Unweighted info measure by rollout")
 
-    ax4 = fig.add_subplot(gs[3, num_signals:num_signals*2])
+    # weighted info measure plot
+    w_info_plot = fig.add_subplot(gs[3, num_signals:num_signals*2])
     # for sig in reversed(range(num_signals)):
     #   ax3.plot(ix, w_infoy[sig], label=f"Signal {sig}")
     #   ax3.fill_between(ix, w_infoy[sig])
-    ax4.plot(ix, w_infoy[-1], label="Weighted")
-    ax4.plot(ix, w_flr_infoy, label="Floor weighted")
-    ax4.plot(ix, w_opt_infoy, label="Optimal weighted")
-    ax4.legend(loc="upper left")
-    ax4.set_xlabel("rollout")
-    ax4.set_ylabel("info measure")
-    ax4.set_title("Weighted info measure by rollout")
+    w_info_plot.plot(ix, w_infoy[-1], label="Weighted")
+    w_info_plot.plot(ix, w_flr_infoy, label="Floor weighted")
+    w_info_plot.plot(ix, w_opt_infoy, label="Optimal weighted")
+    w_info_plot.legend(loc="upper left")
+    w_info_plot.set_xlabel("rollout")
+    w_info_plot.set_ylabel("info measure")
+    w_info_plot.set_title("Weighted info measure by rollout")
 
-    ax7 = fig.add_subplot(gs[3, num_signals*2:num_signals*3])
+    # payoff plot
+    payoff_plot = fig.add_subplot(gs[3, num_signals*2:num_signals*3])
     # for sig in reversed(range(num_signals)):
     #   ax3.plot(ix, w_infoy[sig], label=f"Signal {sig}")
     #   ax3.fill_between(ix, w_infoy[sig])
-    ax7.plot(ix, exp_py, label="Payoff")
-    ax7.plot(ix, flr_py, label="Floor payoff")
-    ax7.plot(ix, opt_py, label="Optimal payoff")
-    ax7.legend(loc="upper left")
-    ax7.set_xlabel("rollout")
-    ax7.set_ylabel("payoff")
-    ax7.set_title("Payoff by rollout")
+    payoff_plot.plot(ix, exp_py, label="Payoff")
+    payoff_plot.plot(ix, flr_py, label="Floor payoff")
+    payoff_plot.plot(ix, opt_py, label="Optimal payoff")
+    payoff_plot.legend(loc="upper left")
+    payoff_plot.set_xlabel("rollout")
+    payoff_plot.set_ylabel("payoff")
+    payoff_plot.set_title("Payoff by rollout")
     
+
+    """ HUGE TEXT BLOCK INCOMING """
+
     text = f"Total unweighted/weighted info measure: [{total_info:.5f}, {w_total_info:.5f}]\n"
     text += "Info measure by signal: ["
     for sig in range(num_signals):
@@ -201,9 +198,12 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
     text += f"Weighted trait 1's low|medium|high: {w_info_by_state_t1[0]:.5f} | {w_info_by_state_t1[1]:.5f} | {w_info_by_state_t1[2]:.5f}"
     text += f" and trait 2's low|medium|high: {w_info_by_state_t2[0]:.5f} | {w_info_by_state_t2[1]:.5f} | {w_info_by_state_t2[2]:.5f}"
 
-    ax5 = fig.add_subplot(gs[4, :])
-    ax5.axis("off")
-    ax5.annotate(text,
+    """ END OF HUGE TEXT BLOCK """
+
+    # statistics plot
+    stats_plot = fig.add_subplot(gs[4, :])
+    stats_plot.axis("off")
+    stats_plot.annotate(text,
             xy=(0, 0.05), xytext=(0, -40),
             xycoords=('axes fraction', 'figure fraction'),
             textcoords='offset points',
@@ -230,5 +230,3 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
     final_output_file = f"{output_file}#{version}"
     version += 1
   imageio.mimsave(f"{final_output_file}.gif", images, duration=duration)
-
-# f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"

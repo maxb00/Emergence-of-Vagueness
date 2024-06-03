@@ -1,6 +1,7 @@
 import numpy as np
 
 def norm(arr):
+  """Normalizes the weights into probabilities"""
   exp = np.exp(arr)
   exp_sum = np.sum(exp)
   return exp / exp_sum * 100
@@ -22,26 +23,31 @@ class Sender:
   Generates a signal given a world state.
 
   Attributes:
-    num_states, num_signals (int): the number of (world) states, signals
+    num_traits, num_states, num_signals (int): the number of traits, (world) states per trait, signals
+    total_states: the number of total states over all traits
     null_signal (boolean): indicates the use of null signals
     signal_weights (np.ndarray): the signal weights
     signal_history (list): history of probability matrix for
       signals
   """
-  def __init__(self, num_states: int, num_signals: int, null_signal=False):
+  def __init__(self, num_traits: int, num_states: int, num_signals: int, null_signal=False):
     """Initializes the instances to set up a sender
     
     Args:
-      num_states (int): the number of (world) states
+      num_traits (int): the number of traits
+      num_states (int): the number of (world) states per trait
       num_signals (int): the number of signals
       null_signal (boolean): indicates the use of null signals
     """
+    self.num_traits = num_traits
     self.num_states = num_states
     self.num_signals = num_signals + (1 if null_signal else 0)
 
+    self.total_states = num_states**num_traits
+
     self.null_signal = null_signal
 
-    self.signal_weights = np.zeros((self.num_signals, num_states))
+    self.signal_weights = np.zeros((self.num_signals, self.total_states))
 
     self.signal_history = []
 
@@ -63,8 +69,7 @@ class Sender:
     self.curr_signal = signal
 
     if record:
-      # self.signal_history.append(np.resize(prob, (self.num_signals, round(np.sqrt(self.num_states)), round(np.sqrt(self.num_states)))))
-      self.signal_history.append(np.resize(prob, (self.num_signals, 3, 3, 3)))
+      self.signal_history.append(np.resize(prob, tuple([self.num_signals].extend([self.num_states] * self.num_traits))))
 
     return signal
   
@@ -80,6 +85,8 @@ class Sender:
 
     maxw = np.max(self.signal_weights[:, state])
     minw = np.min(self.signal_weights[:, state])
+
+    # Setting the range of weights from -300 to 300
     if maxw - minw > 600:
       self.signal_weights[:, state] = (self.signal_weights[:, state] - minw) * 600 / (maxw - minw) + minw
     elif maxw > 300:
@@ -102,16 +109,16 @@ class Sender:
   def print_signal_prob(self):
     """Prints the current signal probabilities"""
     prob = np.zeros_like(self.signal_weights)
-    for i in range(self.num_states):
+    for i in range(self.total_states):
       prob[:, i] = norm(self.signal_weights[:, i])
 
     print('m|s', end=' ')
-    for i in range(self.num_states):
+    for i in range(self.total_states):
       print(f'{i:3}', end=' ')
     print()
     for i in range(self.num_signals):
       print(f'{i:3}', end=' ')
-      for j in range(self.num_states):
+      for j in range(self.total_states):
         print(f'{int(prob[i, j]):3}', end=' ')
       print()
   
@@ -122,22 +129,27 @@ class Receiver:
   Updates the probabilities using stimulus generalization
 
   Attributes:
-    num_signals, num_actions (int): the number of signals, actions
+    num_traits, num_signals, num_actions (int): the number of traits, signals, actions per trait
+    total_actions (int): the number of total actions over all traits
     action_weights (np.ndarray): the action weights
     action_history (list): history of probability matrix for
       actions
   """
-  def __init__(self, num_signals: int, num_actions: int):
+  def __init__(self, num_traits: int, num_signals: int, num_actions: int):
     """Initializes the instances to set up a receiver
 
     Args:
+      num_traits (int): the number of traits
       num_signals (int): the number of signals
-      num_action (int): the number of actions
+      num_action (int): the number of actions per trait
     """
+    self.num_traits = num_traits
     self.num_signals = num_signals
     self.num_actions = num_actions
 
-    self.action_weights = np.zeros((num_signals, num_actions))
+    self.total_actions = num_actions**num_traits
+
+    self.action_weights = np.zeros((num_signals, self.total_actions))
 
     self.action_history = []
 
@@ -157,11 +169,11 @@ class Receiver:
     if signal == -1:
       action = -1
     else:
-      action = np.random.choice(self.num_actions, p=prob.T[signal])
+      action = np.random.choice(self.total_actions, p=prob.T[signal])
     self.curr_action = action
 
     if record:
-      self.action_history.append(np.resize(prob.T, (self.num_signals, 3, 3, 3)))
+      self.action_history.append(np.resize(prob.T, tuple([self.num_signals].extend([self.num_actions] * self.num_traits))))
 
     return action
   
@@ -177,6 +189,8 @@ class Receiver:
 
     maxw = np.max(self.action_weights[signal])
     minw = np.min(self.action_weights[signal])
+
+    # Setting the range of weights from -300 to 300
     if maxw - minw > 600:
       self.action_weights[signal] = (self.action_weights[signal] - minw) * 600 / (maxw - minw) + minw
     elif maxw > 300:
@@ -203,12 +217,12 @@ class Receiver:
       prob[i, :] = norm(self.action_weights[i, :])
 
     print('m|a', end=' ')
-    for i in range(self.num_actions):
+    for i in range(self.total_actions):
       print(f'{i:3}', end=' ')
     print()
     for i in range(self.num_signals):
       print(f'{i:3}', end=' ')
-      for j in range(self.num_actions):
+      for j in range(self.total_actions):
         print(f'{int(prob[i, j]):3}', end=' ')
       print()
 
