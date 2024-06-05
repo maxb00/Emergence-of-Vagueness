@@ -221,8 +221,8 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
     os.mkdir("simulations")
   
   subfolder = f"{num_states}_{num_signals}_{num_states}"
-  if not os.path.exists(f"./simulations/v6/{subfolder}"):
-    os.makedirs(f"simulations/v6/{subfolder}/")
+  if not os.path.exists(f"./simulations/v7/{subfolder}"):
+    os.makedirs(f"simulations/v7/{subfolder}/")
   
   version = 1
   final_output_file = f"{output_file}"
