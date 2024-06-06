@@ -479,7 +479,6 @@ class SignalingGame:
 
     return self.expected_payoff(floor_sig, floor_act)
   
-  # HARD_CODED FOR SOME NUMBER OF TRAITS (Line 528: np.resize line)
   def info_measure(self, signal_prob, weighted=True) -> float:
     """Calculates the information content of the signals
 
@@ -617,23 +616,20 @@ class SignalingGame:
   def numerize(self, state) -> int:
     """Turn a state/action from an nd array to a number"""
     fstate = 0
-    for i, s in enumerate(state):
+    for i, s in enumerate(reversed(state)):
       fstate += s * (self.num_states**i)
 
     return fstate
   
-  # NOTE: .insert(0, ...) makes more sense than .append() here but for some reason .append() gives the wanted results while .insert() does not???
   def unnumerize(self, action: int):
     """Turn a numerized state/action into an nd array"""
     ufaction = []
     while action > 0:
-      # Not sure why this isn't .insert(0, ...)?
-      ufaction.append(action % self.num_states)
+      ufaction.insert(0, action % self.num_states)
       action = action // self.num_states
 
     while len(ufaction) < self.num_traits:
-      # Same comment as above about using .insert(0, ...)?
-      ufaction.append(0)
+      ufaction.insert(0, 0)
 
     return ufaction
   
@@ -647,61 +643,66 @@ class SignalingGame:
     """
     for i in range(num_iter):
       state = self.gen_state()
+      # print(f"state={state}")
       self.curr_state = state
       state = self.numerize(state)
+      # print(f"numerized state={state}")
       if record_interval > 0 and (i+1) % record_interval == 0:
         signal = self.sender.gen_signal(state, True)
         action = self.receiver.gen_action(signal, True)
       else:
         signal = self.sender.gen_signal(state)
         action = self.receiver.gen_action(signal)
+      # print(f"numerized action={action}")
       action = self.unnumerize(action)
+      # print(f"action={action}")
       self.curr_signal = signal
       self.curr_action = action
 
       reward = self.evaluate(self.curr_state, self.curr_action)
+      # print(f"reward={reward}")
+      # exit(0)
       self.update_history(reward)
       self.sender.update(self.history[-1])
       self.receiver.update(self.history[-1])
 
-      # if i == num_iter - 1:
-      #   print(f"game={self.history[-1]}")
-      #   print("Signal weights & probs:")
-      #   print(self.sender.signal_weights)
-      #   self.sender.print_signal_prob()
-      #   print("Action weights & probs:")
-      #   print(self.receiver.action_weights)
-      #   self.receiver.print_action_prob()
-      #   print(self.optimal_info(False))
+      if i == num_iter - 1:
+        print(f"game={self.history[-1]}")
+        print("Signal weights & probs:")
+        print(self.sender.signal_weights)
+        self.sender.print_signal_prob()
+        print("Action weights & probs:")
+        print(self.receiver.action_weights)
+        self.receiver.print_action_prob()
 
     # if record_interval == -1:
     #   return self.info_measure(self.sender.signal_history[-1])
 
-    """ TESTING: Info content by rows/columns in 3D """
-    _, _, info_state = self.info_measure(self.sender.signal_history[-1], False)
-    _, _, w_info_state = self.info_measure(self.sender.signal_history[-1])
+    """ TESTING: Info content by rows/columns in 2D/3D """
+    # _, _, info_state = self.info_measure(self.sender.signal_history[-1], False)
+    # _, _, w_info_state = self.info_measure(self.sender.signal_history[-1])
 
-    info_by_state_t1 = [np.sum(info_state[:, :, i]) for i in range(self.num_states)]
-    info_by_state_t2 = [np.sum(info_state[:, i, :]) for i in range(self.num_states)]
+    # info_by_state_t1 = [np.sum(info_state[:, :, i]) for i in range(self.num_states)]
+    # info_by_state_t2 = [np.sum(info_state[:, i, :]) for i in range(self.num_states)]
     # info_by_state_t3 = [np.sum(info_state[:, i, :, :]) for i in range(self.num_states)]
 
     # print(f"Unweighted trait 1's low|medium|high: {info_by_state_t1[0]:.5f} | {info_by_state_t1[1]:.5f} | {info_by_state_t1[2]:.5f}")
     # print(f"Unweighted trait 2's low|medium|high: {info_by_state_t2[0]:.5f} | {info_by_state_t2[1]:.5f} | {info_by_state_t2[2]:.5f}")
     # print(f"Unweighted trait 3's low|medium|high: {info_by_state_t3[0]:.5f} | {info_by_state_t3[1]:.5f} | {info_by_state_t3[2]:.5f}")
 
-    w_info_by_state_t1 = [np.sum(w_info_state[:, :, i]) for i in range(self.num_states)]
-    w_info_by_state_t2 = [np.sum(w_info_state[:, i, :]) for i in range(self.num_states)]
+    # w_info_by_state_t1 = [np.sum(w_info_state[:, :, i]) for i in range(self.num_states)]
+    # w_info_by_state_t2 = [np.sum(w_info_state[:, i, :]) for i in range(self.num_states)]
     # w_info_by_state_t3 = [np.sum(w_info_state[:, i, :, :]) for i in range(self.num_states)]
 
     # print(f"Weighted trait 1's low|medium|high: {w_info_by_state_t1[0]:.5f} | {w_info_by_state_t1[1]:.5f} | {w_info_by_state_t1[2]:.5f}")
     # print(f"Weighted trait 2's low|medium|high: {w_info_by_state_t2[0]:.5f} | {w_info_by_state_t2[1]:.5f} | {w_info_by_state_t2[2]:.5f}")
     # print(f"Weighted trait 3's low|medium|high: {w_info_by_state_t3[0]:.5f} | {w_info_by_state_t3[1]:.5f} | {w_info_by_state_t3[2]:.5f}")
 
-    # gif_filename = f"./simulations/v7/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}" #HARD-CODED
+    gif_filename = f"./simulations/v7/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}" #HARD-CODED
   
-    # gen_gif(self, num_iter, record_interval, 100, gif_filename)
+    gen_gif(self, num_iter, record_interval, 100, gif_filename)
 
-    return (info_by_state_t1, info_by_state_t2, w_info_by_state_t1, w_info_by_state_t2)
+    # return (info_by_state_t1, info_by_state_t2, w_info_by_state_t1, w_info_by_state_t2)
 
     # return (info_by_state_t1, info_by_state_t2, info_by_state_t3, w_info_by_state_t1, w_info_by_state_t2, w_info_by_state_t3)
   
