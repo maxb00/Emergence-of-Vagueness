@@ -643,37 +643,31 @@ class SignalingGame:
     """
     for i in range(num_iter):
       state = self.gen_state()
-      # print(f"state={state}")
       self.curr_state = state
       state = self.numerize(state)
-      # print(f"numerized state={state}")
       if record_interval > 0 and (i+1) % record_interval == 0:
         signal = self.sender.gen_signal(state, True)
         action = self.receiver.gen_action(signal, True)
       else:
         signal = self.sender.gen_signal(state)
         action = self.receiver.gen_action(signal)
-      # print(f"numerized action={action}")
       action = self.unnumerize(action)
-      # print(f"action={action}")
       self.curr_signal = signal
       self.curr_action = action
 
       reward = self.evaluate(self.curr_state, self.curr_action)
-      # print(f"reward={reward}")
-      # exit(0)
       self.update_history(reward)
       self.sender.update(self.history[-1])
       self.receiver.update(self.history[-1])
 
-      if i == num_iter - 1:
-        print(f"game={self.history[-1]}")
-        print("Signal weights & probs:")
-        print(self.sender.signal_weights)
-        self.sender.print_signal_prob()
-        print("Action weights & probs:")
-        print(self.receiver.action_weights)
-        self.receiver.print_action_prob()
+      # if i == num_iter - 1:
+      #   print(f"game={self.history[-1]}")
+      #   print("Signal weights & probs:")
+      #   print(self.sender.signal_weights)
+      #   self.sender.print_signal_prob()
+      #   print("Action weights & probs:")
+      #   print(self.receiver.action_weights)
+      #   self.receiver.print_action_prob()
 
     # if record_interval == -1:
     #   return self.info_measure(self.sender.signal_history[-1])

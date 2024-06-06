@@ -25,13 +25,20 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
   num_states = len(signal_history[0][0])
   num_signals = len(action_history[0])
 
-  flr_p = game.floor_payoff()
-  flr_info = game.floor_info(False)
-  w_flr_info = game.floor_info()
+  """ For setups where the optimal strategy is not yet known """
+  # flr_p = game.floor_payoff()
+  # flr_info = game.floor_info(False)
+  # w_flr_info = game.floor_info()
+  flr_p = 0
+  flr_info = 0
+  w_flr_info = 0
 
-  opt_p = game.optimal_payoff()
-  opt_info = game.optimal_info(False)
-  w_opt_info = game.optimal_info()
+  # opt_p = game.optimal_payoff()
+  # opt_info = game.optimal_info(False)
+  # w_opt_info = game.optimal_info()
+  opt_p = 0
+  opt_info = 0
+  w_opt_info = 0
 
   ix = [] # x coordinates (1, 2, ...)
   exp_py = [] # expected payoff
