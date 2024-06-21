@@ -4,6 +4,42 @@ import math
 
 def run():
 
+  # res = [[0 for _ in range(27)] for _ in range(27)]
+  # for x in range(27):
+  #   for y in range(27):
+  #     diff1 = abs(x // 9 - y // 9)
+  #     diff2 = abs((x % 9) // 3 - (y % 9) // 3)
+  #     diff3 = abs(x % 3 - y % 3)
+
+  #     total_diff = diff1 + diff2 + diff3
+
+  #     res[x][y] = 1 - 0.5 * total_diff
+  
+  # for i in range(27):
+  #   for j in range(27):
+  #     print(f"{res[i][j]:>6}", end='')
+  #   print()
+
+  res = [[0 for _ in range(9)] for _ in range(9)]
+  for x in range(9):
+    for y in range(9):
+      diff1 = abs(x // 3 - y // 3)
+      diff2 = abs(x % 3 - y % 3)
+
+      total_diff = diff1 + diff2
+
+      res[x][y] = 1 - 0.5 * total_diff
+  
+  for i in range(9):
+    print(f"{i+1:>6}", end='')
+    for j in range(9):
+      print(f"{res[i][j]:>6}", end='')
+    print()
+  
+  exit(0)
+
+
+
   t = 2
   n_lst = [5]
   k_lst = [4]
