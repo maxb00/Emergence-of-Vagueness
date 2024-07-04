@@ -18,11 +18,11 @@ def linear_reward_fn(param: tuple[float, float], null_signal=False):
     if null_signal and action == -1:
       return 0
     
-    l2dist = 0
+    l1dist = 0
     for s, a in zip(state, action):
-      l2dist += abs(s - a)
+      l1dist += abs(s - a)
 
-    return param[0] - param[1] * l2dist
+    return param[0] - param[1] * l1dist
   
   return get_reward
 
