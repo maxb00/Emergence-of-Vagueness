@@ -18,11 +18,11 @@ def linear_reward_fn(param: tuple[float, float], null_signal=False):
     if null_signal and action == -1:
       return 0
     
-    l2dist = 0
+    l1dist = 0
     for s, a in zip(state, action):
-      l2dist += abs(s - a)
+      l1dist += abs(s - a)
 
-    return param[0] - param[1] * l2dist
+    return param[0] - param[1] * l1dist
   
   return get_reward
 
@@ -106,7 +106,8 @@ class SignalingGame:
     self.num_signals = num_signals
     self.num_actions = num_actions
 
-    self.state_prob = gen_state_prob(num_traits, num_states)
+    # self.state_prob = gen_state_prob(num_traits, num_states)
+    self.state_prob = np.full(27, 1/27, dtype=np.float64)
 
     self.reward_param = reward_param
 
@@ -660,21 +661,22 @@ class SignalingGame:
       self.sender.update(self.history[-1])
       self.receiver.update(self.history[-1])
 
-      # if i == num_iter - 1:
+      if i == num_iter - 1:
       #   print(f"game={self.history[-1]}")
-      #   print("Signal weights & probs:")
-      #   print(self.sender.signal_weights)
-      #   self.sender.print_signal_prob()
-      #   print("Action weights & probs:")
-      #   print(self.receiver.action_weights)
-      #   self.receiver.print_action_prob()
+        print("Signal weights & probs:")
+        print(self.sender.signal_weights)
+        self.sender.print_signal_prob()
+        print("Action weights & probs:")
+        print(self.receiver.action_weights)
+        self.receiver.print_action_prob()
 
     # if record_interval == -1:
     #   return self.info_measure(self.sender.signal_history[-1])
 
     """ TESTING: Info content by rows/columns in 2D/3D """
-    # _, _, info_state = self.info_measure(self.sender.signal_history[-1], False)
-    # _, _, w_info_state = self.info_measure(self.sender.signal_history[-1])
+    payoff = self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1])
+    info, _, info_state = self.info_measure(self.sender.signal_history[-1], False)
+    w_info, _, w_info_state = self.info_measure(self.sender.signal_history[-1])
 
     # info_by_state_t1 = [np.sum(info_state[:, :, i]) for i in range(self.num_states)]
     # info_by_state_t2 = [np.sum(info_state[:, i, :]) for i in range(self.num_states)]
@@ -692,12 +694,14 @@ class SignalingGame:
     # print(f"Weighted trait 2's low|medium|high: {w_info_by_state_t2[0]:.5f} | {w_info_by_state_t2[1]:.5f} | {w_info_by_state_t2[2]:.5f}")
     # print(f"Weighted trait 3's low|medium|high: {w_info_by_state_t3[0]:.5f} | {w_info_by_state_t3[1]:.5f} | {w_info_by_state_t3[2]:.5f}")
 
-    gif_filename = f"./simulations/v7/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}" #HARD-CODED
+    # gif_filename = f"./simulations/v7/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}" #HARD-CODED
   
-    gen_gif(self, num_iter, record_interval, 100, gif_filename)
+    # gen_gif(self, num_iter, record_interval, 100, gif_filename)
 
     # return (info_by_state_t1, info_by_state_t2, w_info_by_state_t1, w_info_by_state_t2)
 
     # return (info_by_state_t1, info_by_state_t2, info_by_state_t3, w_info_by_state_t1, w_info_by_state_t2, w_info_by_state_t3)
+
+    return (payoff, info, info_state, w_info, w_info_state)
   
   
