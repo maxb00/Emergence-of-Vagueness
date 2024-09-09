@@ -1,5 +1,7 @@
 Number of runs: 500
 Expected payoff = 0.01660231160610862
+Optimal payoff = 0.02263374485596707
+Floor payoff = -0.00000003333333333
 
 UNWEIGHTED
 Info measure = 10.011801237963075
