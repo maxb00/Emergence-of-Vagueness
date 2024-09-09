@@ -106,8 +106,10 @@ class SignalingGame:
     self.num_signals = num_signals
     self.num_actions = num_actions
 
-    # self.state_prob = gen_state_prob(num_traits, num_states)
-    self.state_prob = np.full(27, 1/27, dtype=np.float64)
+    self.total_states = self.num_states**self.num_traits
+
+    self.state_prob = gen_state_prob(num_traits, num_states)
+    # self.state_prob = np.full(27, 1/27, dtype=np.float64)
 
     self.reward_param = reward_param
 
@@ -146,155 +148,26 @@ class SignalingGame:
     """
     return self.reward_fn(state, action)
   
-  # HARD_CODED
   def floor_strat(self):
     """Floor strategies for comparison purposes"""
-    sv = 1e-7
-    
-    if self.num_states == 6:
-      siglv = 1 - 3*sv
-      actlv = 1 - 35*sv
 
-      flr_sig = np.array([
-        [[sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv]],
-        [[sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv]],
-        [[sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv]],
-        [[sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv]],
-      ])
+    small_val = 1e-7
+    sig_large_val = 1 - (self.num_signals-1) * small_val
+    act_large_val = 1 - (self.total_states-1) * small_val
 
-      for i in range(self.num_states):
-        for j in range(self.num_states):
-          rand_sig = self.random.integers(self.num_signals)
-          flr_sig[rand_sig][i][j] = siglv
+    flr_sig = np.full((self.num_signals, self.total_states), small_val)
+    for s in range(self.total_states):
+      rand_sig = self.random.integers(self.num_signals)
+      flr_sig[rand_sig, s] = sig_large_val
 
-      flr_act = np.array([
-        [[sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, actlv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv]],
-        [[sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, actlv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv]],
-        [[sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, actlv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv]],
-        [[sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, actlv, sv, sv],
-        [sv, sv, sv, sv, sv, sv],
-        [sv, sv, sv, sv, sv, sv]],
-      ])
-    elif self.num_signals == 4:
-      siglv = 1 - 3*sv
-      actlv = 1 - 8*sv
+    flr_act = np.full((self.num_signals, self.total_states), small_val)
+    for i in range(self.num_signals):
+      flr_act[i, self.total_states // 2] = act_large_val
 
-      flr_sig = np.array([
-        [[sv, sv, sv],
-        [sv, sv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, sv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, sv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, sv, sv],
-        [sv, sv, sv]],
-      ])
-
-      for i in range(self.num_states):
-        for j in range(self.num_states):
-          rand_sig = self.random.integers(self.num_signals)
-          flr_sig[rand_sig][i][j] = siglv
-
-      flr_act = np.array([
-        [[sv, sv, sv],
-        [sv, actlv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, actlv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, actlv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, actlv, sv],
-        [sv, sv, sv]],
-      ])
-    elif self.num_signals == 5:
-      siglv = 1 - 4*sv
-      actlv = 1 - 8*sv
-
-      flr_sig = np.array([
-        [[sv, sv, sv],
-        [sv, sv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, sv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, sv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, sv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, sv, sv],
-        [sv, sv, sv]]
-      ])
-
-      for i in range(self.num_states):
-        for j in range(self.num_states):
-          rand_sig = self.random.integers(self.num_signals)
-          flr_sig[rand_sig][i][j] = siglv
-
-      flr_act = np.array([
-        [[sv, sv, sv],
-        [sv, actlv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, actlv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, actlv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, actlv, sv],
-        [sv, sv, sv]],
-        [[sv, sv, sv],
-        [sv, actlv, sv],
-        [sv, sv, sv]]
-      ])
+    new_size = [self.num_signals]
+    new_size.extend([self.num_states] * self.num_traits)
+    flr_sig = np.resize(flr_sig, tuple(new_size))
+    flr_act = np.resize(flr_act, tuple(new_size))
 
     return flr_sig, flr_act
   
@@ -445,16 +318,15 @@ class SignalingGame:
     Returns:
       float: the expected payoff
     """
-    total_states = self.num_states**self.num_traits
-    signal_prob = signal_prob.reshape(self.num_signals, total_states)
-    action_prob = action_prob.reshape(self.num_signals, total_states)
+    signal_prob = signal_prob.reshape(self.num_signals, self.total_states)
+    action_prob = action_prob.reshape(self.num_signals, self.total_states)
 
     ep = 0
-    for w in range(total_states):
+    for w in range(self.total_states):
       epw = 0
       for m in range(self.num_signals + (1 if self.null_signal else 0)):
         eps = 0
-        for a in range(total_states):
+        for a in range(self.total_states):
           if not self.null_signal or m != self.num_signals:
             state = self.unnumerize(w)
             action = self.unnumerize(a)
@@ -464,7 +336,7 @@ class SignalingGame:
 
       ep += self.state_prob[w] * epw
 
-    return ep / total_states
+    return ep / self.total_states
 
   def optimal_payoff(self) -> float:
     """Calculates the optimal payoff"""
@@ -492,25 +364,27 @@ class SignalingGame:
       inf_sigs (list): information content by signal
       inf_states (list): information content by state
     """
-    total_states = self.num_states**self.num_traits
-    signal_prob = signal_prob.reshape(self.num_signals, total_states)
+    signal_prob = signal_prob.reshape(self.num_signals, self.total_states)
 
     prob = np.zeros_like(signal_prob)
     for i in range(self.num_signals):
-      for j in range(total_states):
+      for j in range(self.total_states):
         prob[i, j] = signal_prob[i, j] * self.state_prob[j]
+
+    # for weighted version    
     prob_sig = [np.sum(prob[i]) for i in range(self.num_signals)]
+
     prob = (prob.T / np.sum(prob, axis=1)).T
 
-    inf = 0
-    inf_sigs = []
-    inf_states = []
+    inf = 0         # total info
+    inf_sigs = []   # info by signals
+    inf_states = [] # info by states by signals (see v4)
     for i in range(self.num_signals):
       if self.null_signal and i == self.num_signals:
         break
       inf_sig = 0
       inf_states.append([])
-      for j in range(total_states):
+      for j in range(self.total_states):
         inf_state = prob[i, j] * np.log(prob[i, j]/self.state_prob[j])
         inf_sig += inf_state
         
@@ -525,6 +399,7 @@ class SignalingGame:
       inf_sigs.append(inf_sig)
       inf += inf_sig
 
+    # size for inf_states
     new_size = [self.num_signals]
     new_size.extend([self.num_states] * self.num_traits)
     inf_states = np.resize(np.array(inf_states), tuple(new_size))
@@ -542,14 +417,13 @@ class SignalingGame:
     Returns:
       inf_by_trait (list): information content by trait
     """
-    total_states = self.num_states**self.num_traits
-    signal_prob = signal_prob.reshape(self.num_signals, total_states)
+    signal_prob = signal_prob.reshape(self.num_signals, self.total_states)
 
     prob_t1 = np.zeros((self.num_signals, self.num_states))
     prob_t2 = np.zeros((self.num_signals, self.num_states))
     state_prob_t = np.zeros(self.num_states)
     for i in range(self.num_signals):
-      for j in range(total_states):
+      for j in range(self.total_states):
         prob_t1[i, j%self.num_states] += signal_prob[i, j] * self.state_prob[j]
         prob_t2[i, j//self.num_states] += signal_prob[i, j] * self.state_prob[j]
         state_prob_t[j%self.num_states] += self.state_prob[j]
@@ -597,7 +471,7 @@ class SignalingGame:
     Returns:
       int: a new current state (unflattened)
     """
-    state = self.random.choice(self.num_states**self.num_traits, p=self.state_prob)
+    state = self.random.choice(self.total_states, p=self.state_prob)
 
     return self.unnumerize(state)
   
@@ -669,6 +543,7 @@ class SignalingGame:
         print("Action weights & probs:")
         print(self.receiver.action_weights)
         self.receiver.print_action_prob()
+        print(f"{self.floor_payoff():.17f}")
 
     # if record_interval == -1:
     #   return self.info_measure(self.sender.signal_history[-1])
