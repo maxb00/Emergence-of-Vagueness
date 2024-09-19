@@ -78,3 +78,12 @@ For simplicity, we have only been looking at 2-dimensional setups and a few 3-di
 
 * Results:
 The agents are able develop strategies close to optimal, with the unweighted information content distributed as we expected (with the outer states containing higher information content). This is true for both 2- and 3-dimensional cases. However, as we will discuss in the next section, the optimal strategies for 3-dimensional cases using Gaussian distribution for the state generation will produce different results.
+
+### Gurobi
+This setup aims to find the optimal strategies for more complex multiple trait setups with 3 traits, using gurobi.
+
+The gurobi_test.ipynb contains an LP model finding optimal strategies.
+
+* Results:
+As mentioned above, the unweighted information content distribution for the 3D cases using Gaussian distribution is not similar to what we expected. The distribution of both unweighted and weighted information content in these cases resemble that of the Gaussian distrbution, which means most of the information is conveyed in the center states.
+
