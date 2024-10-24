@@ -1,0 +1,2 @@
+traits: 2	expressions: 2	states: 4	signals: 5
+reward: 1, 0.5

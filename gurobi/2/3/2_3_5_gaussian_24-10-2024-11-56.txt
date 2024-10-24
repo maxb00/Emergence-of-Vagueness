@@ -1,0 +1,24 @@
+traits: 2	expressions: 3	states: 9	signals: 5
+reward: 1, 0.5
+Bucket 2: 1 2 3 
+Bucket 4: 4 7 
+Bucket 5: 5 
+Bucket 6: 6 9 
+Bucket 8: 8 
+Number of solutions: 1
+Objective = 0.8857634819986548
+
+Payoff = 0.09841816466651723
+UNWEIGHTED
+Info measure = 8.221651385042652
+Info measure by states:
+[[0.342 0.747 0.342]
+ [1.169 1.300 1.169]
+ [0.535 2.081 0.535]]
+
+WEIGHTED
+Info measure = 1.5760083623257723
+Info measure by states:
+[[0.082 0.179 0.082]
+ [0.213 0.354 0.213]
+ [0.097 0.260 0.097]]
