@@ -2,6 +2,7 @@ import november_lib as lib
 import argparse
 import numpy as np
 import datetime
+from pdb import set_trace
 
 parser = argparse.ArgumentParser(
     prog="Generational learning with imperfect data from the world.",
@@ -32,9 +33,9 @@ def main(args):
     for i in range(states):
         inital_policy[i] = (i // step) + 1
 
-    # 4 to try this week: LinearFunctionPlayer, SigmoidPlayer, MLPPLayer, Player
-    p0 = lib.SigmoidPlayer(policy=inital_policy, n_signals=signals, n_states=states)
-    p1 = lib.SigmoidPlayer(n_signals=signals, n_states=states)
+    # 3 to focus this week: MLPPLayer, NaiveBayesPlayer, LRPlayer
+    p0 = lib.MLPPlayer(policy=inital_policy, n_signals=signals, n_states=states)
+    p1 = lib.MLPPlayer(n_signals=signals, n_states=states)
     test_player_stack = [p0, p1]
     for gen in range(generations):
         learner = test_player_stack.pop()
@@ -43,10 +44,12 @@ def main(args):
         examples = teacher.poll(samples, sampling_strat=strat)
         learner.learn(examples, threshold)
 
-        next_gen = lib.SigmoidPlayer(n_signals=signals, n_states=states)
+        next_gen = lib.MLPPlayer(n_signals=signals, n_states=states)
         test_player_stack.append(teacher)
         test_player_stack.append(learner)
         test_player_stack.append(next_gen)
+
+        # set_trace()
 
         print(f"Finished gen {gen}")
 
@@ -61,6 +64,8 @@ def main(args):
     for i in range(1, generations):
         predictions_filename = f"gen{i}-preds" + blurb + ".jpg"
         test_player_stack[i].graph_preds(predictions_filename)
+
+    # set_trace()
     
 
 if __name__ == "__main__":

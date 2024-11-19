@@ -8,8 +8,12 @@ from matplotlib import colormaps
 import matplotlib.patches as patches
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
 from math import inf, exp
 from pdb import set_trace
+import gc
+import matplotlib
+matplotlib.use("TKAgg")
 
 def SuppressWarning(func):
     def wrapper(*args):
@@ -52,6 +56,9 @@ class Player:
             valid_moves.append(move)
             groups[group].append(move)
 
+        if len(valid_moves) == 0:
+            return [(i,0) for i in range(self.states)]
+
         if sampling_strat == "random":
             if n_samples > len(valid_moves):
                 return valid_moves
@@ -63,7 +70,7 @@ class Player:
             smallest_group = inf
             for group in groups:
                 group_size = len(groups[group])
-                if group_size < smallest_group:
+                if group_size != 0 and group_size < smallest_group:
                     smallest_group = group_size
             
             if smallest_group < per_group:
@@ -242,6 +249,7 @@ class LinearFunctionPlayer(Player):
         labels = [f"Signal {i+1}" for i in range(self.signals)]
         labels.append("Threshold")
 
+        plt.figure(figsize=(7,5))
         plt.plot(range(1, self.states+1), predictions)
         plt.plot(range(1, self.states+1), [self.threshold] * self.states)
         plt.xlim(0, 101)
@@ -256,6 +264,8 @@ class LinearFunctionPlayer(Player):
             plt.clf()
         else:
             plt.show()
+        plt.close()
+        gc.collect()
 
 
 class SigmoidPlayer(LinearFunctionPlayer):
@@ -341,6 +351,7 @@ class SKLearnPlayer(Player):
         labels = [f"Signal {i+1}" for i in range(self.signals)]
         labels.append("Threshold")
 
+        plt.figure(figsize=(7,5))
         plt.plot(range(1, self.states+1), predictions)
         plt.plot(range(1, self.states+1), [self.threshold] * self.states)
         plt.xlim(1, 100)
@@ -355,6 +366,8 @@ class SKLearnPlayer(Player):
             plt.clf()
         else:
             plt.show()
+        plt.close()
+        gc.collect()
 
 
 """
@@ -364,7 +377,7 @@ class MLPPlayer(SKLearnPlayer):
     @SuppressWarning
     def learn(self, examples, threshold=0.5):
         # train classifier
-        clf = MLPClassifier((3,3), max_iter=10000)
+        clf = MLPClassifier((3,3), random_state=1, solver='sgd', max_iter=10000)
         # (state, signal) - (0, 1), (24, 1), (59, 2)
         X = np.asarray([x[0] for x in examples]).reshape(-1, 1)
         y = np.asarray([x[1] for x in examples])
@@ -412,9 +425,38 @@ class LRPlayer(SKLearnPlayer):
         self.given_examples = examples
 
 
+"""
+SK-Learn player implementing naive bayes
+Doc: https://scikit-learn.org/1.5/modules/naive_bayes.html
+'although naive Bayes is known as a decent classifier, it is known to be a bad estimator, 
+so the probability outputs from predict_proba are not to be taken too seriously.'
+"""
+class NaiveBayesPlayer(SKLearnPlayer):
+    def learn(self, examples, threshold=0.5):
+        X = np.asarray([x[0] for x in examples]).reshape(-1,1)
+        y = np.asarray([x[1] for x in examples])
+
+        clf = GaussianNB()
+        clf.fit(X, y)
+
+        working_policy = np.zeros(self.states, dtype=np.int64)
+        for i in range(self.states):
+            pred, prob = self.predict(clf, i)
+            if prob >= threshold:
+                working_policy[i] = pred
+
+        self.policy = working_policy
+        self.classifier = clf
+        self.threshold = threshold
+        self.given_examples = examples
+
+        # set_trace()
+
+
 def show_history(player_stack, filename=None):
     _, axes = plt.subplots(nrows=len(player_stack)-1, sharex=True,
-                           figsize=(15, len(player_stack) * 0.5))
+                           figsize=(7, len(player_stack) * 0.5),
+                           )
 
     for i, player in enumerate(player_stack[:-1]):
         axes[i] = player.plot_strategy(axes[i])
@@ -422,15 +464,19 @@ def show_history(player_stack, filename=None):
 
     plt.xlabel("States")
     if filename is not None:
-        plt.savefig(filename)
+        plt.savefig(filename, dpi=200)
         plt.clf()
     else: 
         plt.show()
+    plt.close()
+    gc.collect()
 
 
 def plot_utility(player_stack, policy, filename=None):
     player_stack = player_stack[:-1]
     utils = [x.utility(policy) for x in player_stack]
+
+    plt.figure(figsize=(7,5))
     plt.plot(utils)
     plt.xlabel("Generation")
     plt.ylabel("Utility")
@@ -438,3 +484,5 @@ def plot_utility(player_stack, policy, filename=None):
         plt.savefig(filename)
         plt.clf()
     else: plt.show()
+    plt.close()
+    gc.collect()
