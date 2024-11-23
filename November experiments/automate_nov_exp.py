@@ -34,6 +34,7 @@ def main(args):
         inital_policy[i] = (i // step) + 1
 
     # 3 to focus this week: MLPPLayer, NaiveBayesPlayer, LRPlayer
+    # This week: Investigate MLPPlayer - Extinction, Eliminate vague edges on Function players, Add a function to KNN?, Reproduce LRPlayer results, Naive Bayes Bernoilli 
     p0 = lib.MLPPlayer(policy=inital_policy, n_signals=signals, n_states=states)
     p1 = lib.MLPPlayer(n_signals=signals, n_states=states)
     test_player_stack = [p0, p1]
@@ -65,7 +66,18 @@ def main(args):
         predictions_filename = f"gen{i}-preds" + blurb + ".jpg"
         test_player_stack[i].graph_preds(predictions_filename)
 
-    # set_trace()
+    f = open("examples.txt", "w")
+
+    for i, player in enumerate(test_player_stack):
+        f.write(f"Generation {i}:")
+        if player.given_examples is None:
+            continue
+        for ex in player.given_examples:
+            f.write(f"({ex[0]}, {ex[1]}), ")
+        f.write("\n")
+    f.flush()
+    f.close()
+    
     
 
 if __name__ == "__main__":

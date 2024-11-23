@@ -8,7 +8,7 @@ from matplotlib import colormaps
 import matplotlib.patches as patches
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import GaussianNB, BernoulliNB
 from math import inf, exp
 from pdb import set_trace
 import gc
@@ -102,6 +102,7 @@ class Player:
 
 
     def predict(self, examples, state, k_neighbors=5):
+        # Things to try: fraction of neighbors
         # I'm going to implement a basic KNN
         distance = []
         for point_group in examples:
@@ -436,7 +437,8 @@ class NaiveBayesPlayer(SKLearnPlayer):
         X = np.asarray([x[0] for x in examples]).reshape(-1,1)
         y = np.asarray([x[1] for x in examples])
 
-        clf = GaussianNB()
+        # clf = GaussianNB()
+        clf = BernoulliNB()
         clf.fit(X, y)
 
         working_policy = np.zeros(self.states, dtype=np.int64)
