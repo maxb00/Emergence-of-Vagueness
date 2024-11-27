@@ -33,8 +33,7 @@ def main(args):
     for i in range(states):
         inital_policy[i] = (i // step) + 1
 
-    # 3 to focus this week: MLPPLayer, NaiveBayesPlayer, LRPlayer
-    # This week: Investigate MLPPlayer - Extinction, Eliminate vague edges on Function players, Add a function to KNN?, Reproduce LRPlayer results, Naive Bayes Bernoilli 
+    # This week: Investigate Naive Bayes Bernoilli 
     p0 = lib.MLPPlayer(policy=inital_policy, n_signals=signals, n_states=states)
     p1 = lib.MLPPlayer(n_signals=signals, n_states=states)
     test_player_stack = [p0, p1]

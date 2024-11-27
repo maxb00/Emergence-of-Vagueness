@@ -1,18 +1,20 @@
 import numpy as np
+import gc
+import matplotlib
+import math
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from numpy.typing import NDArray
 from warnings import warn, catch_warnings
 from collections import Counter, defaultdict
 from random import sample
-import matplotlib.pyplot as plt
 from matplotlib import colormaps
-import matplotlib.patches as patches
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB, BernoulliNB
 from math import inf, exp
 from pdb import set_trace
-import gc
-import matplotlib
+
 matplotlib.use("TKAgg")
 
 def SuppressWarning(func):
@@ -29,6 +31,8 @@ class Player:
         self.policy = policy
         self.signals = n_signals
         self.states = n_states
+        self.trained_neigbors = 5
+        self.threshold = 0.5
         if policy is not None:
             self.given_examples = []
         else:
@@ -83,27 +87,60 @@ class Player:
             return examples
 
     
-    def learn(self, examples, k_neighbors):
+    def learn(self, examples, k_neighbors, vagueness=True, threshold=0.7):
         # learns policy from examples
         # ideally, we extend Player and override this method 
         # for each learning algorithm we want to implement
         if self.policy is not None:
             warn("This player already has a policy! Be aware, this will overwrite it.")
 
+        if vagueness:
+            one_above_half = math.floor(k_neighbors / 2) + 1
+            min_threshold = one_above_half / k_neighbors
+            assert threshold > min_threshold
+
         # do the learning
         working_policy = np.zeros(self.states, dtype=np.int64)
         n_examples = len(examples)
+        k_neighbors = k_neighbors if n_examples > k_neighbors else n_examples
         for state in range(self.states):
-            k_neighbors = k_neighbors if n_examples > k_neighbors else n_examples
-            working_policy[state] = self.predict(examples, state, k_neighbors)
+            if vagueness == False:
+                working_policy[state] = self.predict(examples, state, k_neighbors, False)
+            else:
+                pred, prob = self.predict(examples, state, k_neighbors, True)
+                if prob >= threshold:
+                    working_policy[state] = pred
 
         self.policy = working_policy
         self.given_examples = examples
+        self.trained_neigbors = k_neighbors
+        self.threshold = threshold
 
 
-    def predict(self, examples, state, k_neighbors=5):
-        # Things to try: fraction of neighbors
-        # I'm going to implement a basic KNN
+    def predict(self, examples, state, k_neighbors=5, vagueness=True):
+        # Basic KNN
+        neighbors = self.get_sorted_neighbors(examples, state)[:k_neighbors]
+
+        # make prediction
+        if vagueness == False:
+            c = Counter()
+            for n in neighbors:
+                c[n[1]] += 1
+            # return winner
+            return c.most_common(1)[0][0]
+        else:
+            c = np.asarray([0] * self.signals)
+            for n in neighbors:
+                c[n[1]-1] += 1
+            probs = c / k_neighbors
+            most_confident = np.argmax(probs)
+            prediction = most_confident + 1
+            confidence = probs[most_confident]
+            return prediction, confidence
+
+
+    def get_sorted_neighbors(self, examples, state):
+        # get distances
         distance = []
         for point_group in examples:
             point, group = point_group
@@ -112,13 +149,10 @@ class Player:
             else:
                 # implement distance function for cartesian points
                 dist = 0.5
-            distance.append((dist, group))
-        neighbors = sorted(distance)[:k_neighbors]
-        c = Counter()
-        for n in neighbors:
-            c[n[1]] += 1
-        return c.most_common(1)[0][0]
-    
+            distance.append((dist, group)) 
+
+        # sort distances, take k best
+        return sorted(distance)
 
     def utility(self, init_policy):
         # compares (self) player's policy to given policy
@@ -150,6 +184,7 @@ class Player:
             
             if i in givens:
                 rect = patches.Rectangle((i, 0), 1, 1, linewidth=1, edgecolor="black", facecolor="plum")
+                # draw number on secondary axis?
             else:
                 rect = patches.Rectangle((i, 0), 1, 1, linewidth=1, edgecolor="black", facecolor=color)
                 
@@ -161,12 +196,47 @@ class Player:
 
         return ax
     
+    def graph_preds(self, filename=None):
+        assert self.given_examples is not None
+
+        predictions = np.zeros((self.states, self.signals))
+        for state in range(self.states):
+            neighbors = self.get_sorted_neighbors(self.given_examples, state)[:self.trained_neigbors]
+            cnt = np.asarray([0] * self.signals)
+            for ne in neighbors:
+                cnt[ne[1]-1] += 1
+            probs = cnt / self.trained_neigbors
+            predictions[state] = probs
+
+        # set_trace()
+        
+        # create legend
+        labels = [f"Signal {i+1}" for i in range(self.signals)]
+        labels.append("Threshold")
+
+        plt.figure(figsize=(7,5))
+        plt.plot(range(1, self.states+1), predictions)
+        plt.plot(range(1, self.states+1), [self.threshold] * self.states)
+        plt.xlim(1, 100)
+        plt.ylim(0, 1)
+        plt.xlabel("State")
+        plt.ylabel("Confidence")
+        plt.legend(labels=labels)
+        plt.grid(True)
+
+        if isinstance(filename, str):
+            plt.savefig(filename)
+            plt.clf()
+        else:
+            plt.show()
+        plt.close()
+        gc.collect()
+    
 
 class LinearFunctionPlayer(Player):
     def __init__(self, *args, **kwargs):
         Player.__init__(self, *args, **kwargs)
         self.functions = None
-        self.threshold = 0.5
 
     def learn(self, examples, threshold=0.5):
         # learn bounds from examples
@@ -196,12 +266,16 @@ class LinearFunctionPlayer(Player):
                     if state < low:
                         # function between low and super low
                         # points: (low, 1), (super_low, 0)
+                        if super_low == -1:
+                            return 1
                         slope = 1.0 / (low - super_low)
                         intercept = -(slope*low - 1)
                         return max((slope*state) + intercept, 0)
                     elif state > high:
                         # function between high and super
-                        # points: (high, 1), (super_high, 0) 
+                        # points: (high, 1), (super_high, 0)
+                        if super_high == self.states:
+                            return 1 
                         slope = -1.0 / (super_high - high)
                         intercept = -(slope*high - 1)
                         return max((slope*state) + intercept, 0)
@@ -298,12 +372,16 @@ class SigmoidPlayer(LinearFunctionPlayer):
                     if state < low:
                         # function between low and super low
                         # points: (low, 1), (super_low, 0)
+                        if super_low == -1:
+                            return 1
                         a = 8 / (low-super_low)
                         b = (low - ((low - super_low) // 2)) * a
                         return 1 / (1 + exp((-a * state)+b))
                     elif state > high:
                         # function between high and super
-                        # points: (high, 1), (super_high, 0) 
+                        # points: (high, 1), (super_high, 0)
+                        if super_high == self.states:
+                            return 1
                         a = 8 / (super_high - high)
                         b = (super_high - ((super_high - high) // 2)) * a
                         return 1 / (1 + exp((a*state)-b))
@@ -331,7 +409,6 @@ class SKLearnPlayer(Player):
     def __init__(self, *args, **kwargs):
         Player.__init__(self, *args, **kwargs)
         self.classifier = None
-        self.threshold = 0.5
 
     def predict(self, model, state: int):
         probabilities = model.predict_proba(np.array([[state]]))
@@ -377,8 +454,16 @@ SK-learn player implementing a multi-layer perceptron classifier. Hidden shape: 
 class MLPPlayer(SKLearnPlayer):
     @SuppressWarning
     def learn(self, examples, threshold=0.5):
+        # scale data?
+
         # train classifier
-        clf = MLPClassifier((3,3), random_state=1, solver='sgd', max_iter=10000)
+        clf = MLPClassifier(
+            (3,3), 
+            random_state=1, 
+            solver='lbfgs', 
+            max_iter=300,
+            alpha=0.1
+            )
         # (state, signal) - (0, 1), (24, 1), (59, 2)
         X = np.asarray([x[0] for x in examples]).reshape(-1, 1)
         y = np.asarray([x[1] for x in examples])
@@ -456,11 +541,13 @@ class NaiveBayesPlayer(SKLearnPlayer):
 
 
 def show_history(player_stack, filename=None):
+    # double the numeber of rows
     _, axes = plt.subplots(nrows=len(player_stack)-1, sharex=True,
                            figsize=(7, len(player_stack) * 0.5),
                            )
 
     for i, player in enumerate(player_stack[:-1]):
+        # pass extra axis to plot_strategy
         axes[i] = player.plot_strategy(axes[i])
         axes[i].set_ylabel(i)
 
