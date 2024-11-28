@@ -34,8 +34,8 @@ def main(args):
         inital_policy[i] = (i // step) + 1
 
     # 3 to focus this week: MLPPLayer, NaiveBayesPlayer, LRPlayer
-    p0 = lib.MLPPlayer(policy=inital_policy, n_signals=signals, n_states=states)
-    p1 = lib.MLPPlayer(n_signals=signals, n_states=states)
+    p0 = lib.LRPlayer(policy=inital_policy, n_signals=signals, n_states=states)
+    p1 = lib.LRPlayer(n_signals=signals, n_states=states)
     test_player_stack = [p0, p1]
     for gen in range(generations):
         learner = test_player_stack.pop()
@@ -44,7 +44,7 @@ def main(args):
         examples = teacher.poll(samples, sampling_strat=strat)
         learner.learn(examples, threshold)
 
-        next_gen = lib.MLPPlayer(n_signals=signals, n_states=states)
+        next_gen = lib.LRPlayer(n_signals=signals, n_states=states)
         test_player_stack.append(teacher)
         test_player_stack.append(learner)
         test_player_stack.append(next_gen)
