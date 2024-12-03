@@ -11,7 +11,7 @@ from random import sample
 from matplotlib import colormaps
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.naive_bayes import GaussianNB, BernoulliNB
+from sklearn.naive_bayes import GaussianNB
 from math import inf, exp
 from pdb import set_trace
 
@@ -522,8 +522,7 @@ class NaiveBayesPlayer(SKLearnPlayer):
         X = np.asarray([x[0] for x in examples]).reshape(-1,1)
         y = np.asarray([x[1] for x in examples])
 
-        # clf = GaussianNB()
-        clf = BernoulliNB()
+        clf = GaussianNB()
         clf.fit(X, y)
 
         working_policy = np.zeros(self.states, dtype=np.int64)
