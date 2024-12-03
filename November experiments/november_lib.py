@@ -168,13 +168,15 @@ class Player:
     
 
     def plot_strategy(self, ax):
-        # given an axis, plot our strategy
+        # Ensure the policy and examples are available
         assert self.policy is not None
         assert self.given_examples is not None
 
         cmp = colormaps["Pastel1"].colors
-        givens = set([i for i, _ in self.given_examples])
+        # Change givens to a dict mapping from state to signal
+        givens = {state: signal for state, signal in self.given_examples}
         
+        # Draw rectangles for all states based on the policy
         for i in range(self.states):
             signal = self.policy[i]
             if signal == 0:
@@ -182,20 +184,24 @@ class Player:
             else:
                 color = cmp[signal-1]
             
-            if i in givens:
-                rect = patches.Rectangle((i, 0), 1, 1, linewidth=1, edgecolor="black", facecolor="plum")
-                # draw number on secondary axis?
-            else:
-                rect = patches.Rectangle((i, 0), 1, 1, linewidth=1, edgecolor="black", facecolor=color)
-                
+            rect = patches.Rectangle((i, 0), 1, 1, linewidth=1, edgecolor="black", facecolor=color)
             ax.add_patch(rect)
-
+            
+        # Plot numbers at the sampled positions
+        for i in givens:
+            # Plot the actual signal number at the sampled position
+            signal = givens[i]
+            # Move the numbers down a little bit for readability
+            ax.text(i + 0.5, -0.2, str(signal), ha='center', va='center', fontsize=8, color='red')
+        
+        # Adjust plot limits to show the numbers
         ax.set_xlim(0, self.states)
-        ax.set_ylim(0, 1)
+        ax.set_ylim(-0.5, 1)
         ax.set_yticks([])
 
         return ax
     
+
     def graph_preds(self, filename=None):
         assert self.given_examples is not None
 
@@ -217,7 +223,7 @@ class Player:
         plt.figure(figsize=(7,5))
         plt.plot(range(1, self.states+1), predictions)
         plt.plot(range(1, self.states+1), [self.threshold] * self.states)
-        plt.xlim(1, 100)
+        plt.xlim(1, self.states)
         plt.ylim(0, 1)
         plt.xlabel("State")
         plt.ylabel("Confidence")
@@ -327,7 +333,7 @@ class LinearFunctionPlayer(Player):
         plt.figure(figsize=(7,5))
         plt.plot(range(1, self.states+1), predictions)
         plt.plot(range(1, self.states+1), [self.threshold] * self.states)
-        plt.xlim(0, 101)
+        plt.xlim(0, self.states + 1)
         plt.ylim(-0.1, 1.1)
         plt.xlabel("State")
         plt.ylabel("Confidence")
@@ -432,7 +438,7 @@ class SKLearnPlayer(Player):
         plt.figure(figsize=(7,5))
         plt.plot(range(1, self.states+1), predictions)
         plt.plot(range(1, self.states+1), [self.threshold] * self.states)
-        plt.xlim(1, 100)
+        plt.xlim(1, self.states)
         plt.ylim(0, 1)
         plt.xlabel("State")
         plt.ylabel("Confidence")
@@ -540,17 +546,26 @@ class NaiveBayesPlayer(SKLearnPlayer):
 
 
 def show_history(player_stack, filename=None):
-    # double the numeber of rows
-    _, axes = plt.subplots(nrows=len(player_stack)-1, sharex=True,
-                           figsize=(7, len(player_stack) * 0.5),
-                           )
+    num_plots = len(player_stack) - 1
+    fig_height = max(2, num_plots * 1.0)
+    fig, axes = plt.subplots(
+        nrows=num_plots,
+        sharex=True,
+        figsize=(10, fig_height),
+    )
+
+    # Ensure axes is iterable
+    if num_plots == 1:
+        axes = [axes]
 
     for i, player in enumerate(player_stack[:-1]):
-        # pass extra axis to plot_strategy
+        # Pass extra axis to plot_strategy
         axes[i] = player.plot_strategy(axes[i])
-        axes[i].set_ylabel(i)
+        axes[i].set_ylabel(f"Gen {i}", fontsize=12)
+        axes[i].set_ylim(-0.5, 1)  # Ensure y-limits match plot_strategy
 
-    plt.xlabel("States")
+    plt.xlabel("States", fontsize=12)
+    plt.subplots_adjust(hspace=0.3)  # Adjust vertical spacing
     if filename is not None:
         plt.savefig(filename, dpi=200)
         plt.clf()
