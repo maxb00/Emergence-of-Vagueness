@@ -18,9 +18,9 @@ from pdb import set_trace
 matplotlib.use("TKAgg")
 
 def SuppressWarning(func):
-    def wrapper(*args):
+    def wrapper(*args, **kwargs):
         with catch_warnings(action='ignore'):
-            func(*args)
+            return func(*args, **kwargs)
     return wrapper
 
 """
@@ -39,17 +39,17 @@ class Player:
             self.given_examples = None
 
     def poll(self, n_samples: int = -1, sampling_strat="random"):
-        # randomly polls policy across all "certain" states
+        # randomly polls policy across all certain states
         assert self.policy is not None
 
         # iron out how many samples to take
         if n_samples == -1:
             # try to take 20%
             n_samples = len(self.policy) // 5
-            # if 20% can't possible sample each bucket, try.
+            # if 20% can't possibly sample each bucket, try.
             if n_samples < self.signals:
                 n_samples = self.signals
-        
+
         valid_moves = []
         groups = defaultdict(list)
         for i in range(self.states):
@@ -76,17 +76,20 @@ class Player:
                 group_size = len(groups[group])
                 if group_size != 0 and group_size < smallest_group:
                     smallest_group = group_size
-            
+
             if smallest_group < per_group:
                 per_group = smallest_group
 
             examples = []
             for group in groups:
-                examples.extend(sample(groups[group], per_group))
+                if len(groups[group]) >= per_group:
+                    examples.extend(sample(groups[group], per_group))
+                else:
+                    examples.extend(groups[group])
 
             return examples
 
-    
+
     def learn(self, examples, k_neighbors, vagueness=True, threshold=0.7):
         # learns policy from examples
         # ideally, we extend Player and override this method 
@@ -97,7 +100,7 @@ class Player:
         if vagueness:
             one_above_half = math.floor(k_neighbors / 2) + 1
             min_threshold = one_above_half / k_neighbors
-            assert threshold > min_threshold
+            assert threshold > min_threshold, "Threshold too low for vagueness"
 
         # do the learning
         working_policy = np.zeros(self.states, dtype=np.int64)
@@ -131,8 +134,11 @@ class Player:
         else:
             c = np.asarray([0] * self.signals)
             for n in neighbors:
-                c[n[1]-1] += 1
+                if n[1] - 1 < self.signals:
+                    c[n[1]-1] += 1
             probs = c / k_neighbors
+            if np.sum(probs) == 0:
+                return 0, 0  # Return no prediction if no confidence
             most_confident = np.argmax(probs)
             prediction = most_confident + 1
             confidence = probs[most_confident]
@@ -145,27 +151,30 @@ class Player:
         for point_group in examples:
             point, group = point_group
             if isinstance(point, np.int64) or isinstance(point, int):
-                dist = abs(state-point)
+                dist = abs(state - point)
             else:
                 # implement distance function for cartesian points
                 dist = 0.5
             distance.append((dist, group)) 
 
         # sort distances, take k best
-        return sorted(distance)
+        return sorted(distance, key=lambda x: x[0])  # Modified to sort by distance
+
 
     def utility(self, init_policy):
         # compares (self) player's policy to given policy
         # returns utility score as ratio (0-1)
         assert self.policy is not None
-        
+
         score = 0
         for state in range(self.states):
             if self.policy[state] == init_policy[state]:
                 score += 1
+            elif self.policy[state] == 0 or init_policy[state] == 0:  # Added partial credit
+                score += 0.5
 
         return score / self.states
-    
+
 
     def plot_strategy(self, ax):
         # Ensure the policy and examples are available
@@ -200,34 +209,37 @@ class Player:
         ax.set_yticks([])
 
         return ax
-    
 
-    def graph_preds(self, filename=None):
-        assert self.given_examples is not None
-
+    def get_predictions(self):
         predictions = np.zeros((self.states, self.signals))
         for state in range(self.states):
             neighbors = self.get_sorted_neighbors(self.given_examples, state)[:self.trained_neigbors]
             cnt = np.asarray([0] * self.signals)
             for ne in neighbors:
-                cnt[ne[1]-1] += 1
+                if ne[1] - 1 < self.signals:
+                    cnt[ne[1]-1] += 1
             probs = cnt / self.trained_neigbors
             predictions[state] = probs
+        return predictions
 
-        # set_trace()
-        
+    def graph_preds(self, filename=None):
+        assert self.given_examples is not None
+
+        predictions = self.get_predictions()
+
         # create legend
         labels = [f"Signal {i+1}" for i in range(self.signals)]
         labels.append("Threshold")
 
         plt.figure(figsize=(7,5))
-        plt.plot(range(1, self.states+1), predictions)
-        plt.plot(range(1, self.states+1), [self.threshold] * self.states)
+        for sig in range(self.signals):
+            plt.plot(range(1, self.states+1), predictions[:, sig], label=labels[sig])
+        plt.plot(range(1, self.states+1), [self.threshold] * self.states, label=labels[-1], linestyle='--')
         plt.xlim(1, self.states)
         plt.ylim(0, 1)
         plt.xlabel("State")
         plt.ylabel("Confidence")
-        plt.legend(labels=labels)
+        plt.legend()
         plt.grid(True)
 
         if isinstance(filename, str):
@@ -237,7 +249,7 @@ class Player:
             plt.show()
         plt.close()
         gc.collect()
-    
+
 
 class LinearFunctionPlayer(Player):
     def __init__(self, *args, **kwargs):
@@ -275,20 +287,20 @@ class LinearFunctionPlayer(Player):
                         if super_low == -1:
                             return 1
                         slope = 1.0 / (low - super_low)
-                        intercept = -(slope*low - 1)
-                        return max((slope*state) + intercept, 0)
+                        intercept = -(slope * low - 1)
+                        return max((slope * state) + intercept, 0)
                     elif state > high:
                         # function between high and super
                         # points: (high, 1), (super_high, 0)
                         if super_high == self.states:
                             return 1 
                         slope = -1.0 / (super_high - high)
-                        intercept = -(slope*high - 1)
-                        return max((slope*state) + intercept, 0)
+                        intercept = -(slope * high - 1)
+                        return max((slope * state) + intercept, 0)
                     else:
                         return 1
                 return signal_prob
-            functions[signal] = wrapper(l,h,s_l,s_h)
+            functions[signal] = wrapper(l, h, s_l, s_h)
 
         # predict 
         working_policy = np.zeros(self.states, dtype=np.int64)
@@ -302,22 +314,18 @@ class LinearFunctionPlayer(Player):
         self.threshold = threshold
         self.given_examples = examples
 
-    
+
     def predict(self, state, functions):
         predictions = np.zeros(self.signals, dtype=np.float64)
         for signal in range(self.signals):
             confidence = functions[signal+1](state)
             predictions[signal] = confidence
         best_choice = np.argmax(predictions)
-        # set_trace()
         final_prediction = best_choice + 1
         final_confidence = predictions[best_choice]
         return final_prediction, final_confidence
-    
 
-    def graph_preds(self, filename=None):
-        assert self.functions is not None
-
+    def get_predictions(self):
         predictions = np.zeros((self.states, self.signals))
         for state in range(self.states):
             preds = np.zeros(self.signals, dtype=np.float64)
@@ -325,19 +333,26 @@ class LinearFunctionPlayer(Player):
                 confidence = self.functions[signal+1](state)
                 preds[signal] = confidence
             predictions[state] = preds
+        return predictions
+    
+    def graph_preds(self, filename=None):
+        assert self.functions is not None
+
+        predictions = self.get_predictions()
 
         # create legend
         labels = [f"Signal {i+1}" for i in range(self.signals)]
         labels.append("Threshold")
 
         plt.figure(figsize=(7,5))
-        plt.plot(range(1, self.states+1), predictions)
-        plt.plot(range(1, self.states+1), [self.threshold] * self.states)
+        for sig in range(self.signals):
+            plt.plot(range(1, self.states+1), predictions[:, sig], label=labels[sig])
+        plt.plot(range(1, self.states+1), [self.threshold] * self.states, label=labels[-1], linestyle='--')
         plt.xlim(0, self.states + 1)
         plt.ylim(-0.1, 1.1)
         plt.xlabel("State")
         plt.ylabel("Confidence")
-        plt.legend(labels=labels)
+        plt.legend()
         plt.grid(True)
 
         if isinstance(filename, str):
@@ -366,7 +381,7 @@ class SigmoidPlayer(LinearFunctionPlayer):
             bounds[signal] = (low, high)
         bounds[self.signals+1] = (self.states, self.states)
 
-        # learn linear piecewise functions from bounds
+        # learn sigmoid piecewise functions from bounds
         functions = {}
         for signal in range(1, self.signals+1):
             l = bounds[signal][0]
@@ -380,9 +395,9 @@ class SigmoidPlayer(LinearFunctionPlayer):
                         # points: (low, 1), (super_low, 0)
                         if super_low == -1:
                             return 1
-                        a = 8 / (low-super_low)
+                        a = 8 / (low - super_low)
                         b = (low - ((low - super_low) // 2)) * a
-                        return 1 / (1 + exp((-a * state)+b))
+                        return 1 / (1 + exp((-a * state) + b))
                     elif state > high:
                         # function between high and super
                         # points: (high, 1), (super_high, 0)
@@ -390,11 +405,11 @@ class SigmoidPlayer(LinearFunctionPlayer):
                             return 1
                         a = 8 / (super_high - high)
                         b = (super_high - ((super_high - high) // 2)) * a
-                        return 1 / (1 + exp((a*state)-b))
+                        return 1 / (1 + exp((a * state) - b))
                     else:
                         return 1
                 return signal_prob
-            functions[signal] = wrapper(l,h,s_l,s_h)
+            functions[signal] = wrapper(l, h, s_l, s_h)
 
         # predict 
         working_policy = np.zeros(self.states, dtype=np.int64)
@@ -407,6 +422,51 @@ class SigmoidPlayer(LinearFunctionPlayer):
         self.functions = functions
         self.threshold = threshold
         self.given_examples = examples
+
+
+class StrictPlayer(LinearFunctionPlayer):
+    def learn(self, examples):
+        # learn bounds
+        bounds = {}
+        for signal in range(1, self.signals+1):
+            low = inf
+            high = -inf
+            for ex in examples:
+                state, sig = ex
+                if sig == signal:
+                    if low > state:
+                        low = state
+                    if high < state:
+                        high = state
+            bounds[signal] = (low, high)
+        
+        # predict from bounds
+        working_policy = np.zeros(self.states, dtype=np.int64)
+        for state in range(self.states):
+            pred = self.predict(state, bounds)
+            working_policy[state] = pred
+
+        self.policy = working_policy
+        self.functions = bounds
+        self.given_examples = examples
+
+    def predict(self, state, bounds):
+        for signal in bounds:
+            if state >= bounds[signal][0] and state <= bounds[signal][1]:
+                return signal
+        return 0      
+
+    def get_predictions(self):
+        predictions = np.zeros((self.states, self.signals))
+        for state in range(self.states):
+            strict_pred = self.predict(state, self.functions)
+            prediction_vector = np.array([0, 0])
+            if strict_pred != 0:
+                prediction_vector[strict_pred-1] = 1
+            predictions[state] = prediction_vector
+        return predictions
+
+
 
 """
 Intermediate class for Players using an SK-Learn algorithm with an underlying classifier.
@@ -436,13 +496,14 @@ class SKLearnPlayer(Player):
         labels.append("Threshold")
 
         plt.figure(figsize=(7,5))
-        plt.plot(range(1, self.states+1), predictions)
-        plt.plot(range(1, self.states+1), [self.threshold] * self.states)
+        for sig in range(self.signals):
+            plt.plot(range(1, self.states+1), predictions[:, sig], label=labels[sig])
+        plt.plot(range(1, self.states+1), [self.threshold] * self.states, label=labels[-1], linestyle='--')
         plt.xlim(1, self.states)
         plt.ylim(0, 1)
         plt.xlabel("State")
         plt.ylabel("Confidence")
-        plt.legend(labels=labels)
+        plt.legend()
         plt.grid(True)
 
         if isinstance(filename, str):
@@ -460,17 +521,15 @@ SK-learn player implementing a multi-layer perceptron classifier. Hidden shape: 
 class MLPPlayer(SKLearnPlayer):
     @SuppressWarning
     def learn(self, examples, threshold=0.5):
-        # scale data?
-
         # train classifier
         clf = MLPClassifier(
-            (3,3), 
+            hidden_layer_sizes=(3,3), 
             random_state=1, 
             solver='lbfgs', 
             max_iter=300,
             alpha=0.1
             )
-        # (state, signal) - (0, 1), (24, 1), (59, 2)
+        # (state, signal) - e.g., (0, 1), (24, 1), (59, 2)
         X = np.asarray([x[0] for x in examples]).reshape(-1, 1)
         y = np.asarray([x[1] for x in examples])
         
@@ -528,7 +587,8 @@ class NaiveBayesPlayer(SKLearnPlayer):
         X = np.asarray([x[0] for x in examples]).reshape(-1,1)
         y = np.asarray([x[1] for x in examples])
 
-        clf = GaussianNB()
+        # clf = GaussianNB()
+        clf = BernoulliNB()
         clf.fit(X, y)
 
         working_policy = np.zeros(self.states, dtype=np.int64)
@@ -546,7 +606,7 @@ class NaiveBayesPlayer(SKLearnPlayer):
 
 
 def show_history(player_stack, filename=None):
-    num_plots = len(player_stack) - 1
+    num_plots = len(player_stack)
     fig_height = max(2, num_plots * 1.0)
     fig, axes = plt.subplots(
         nrows=num_plots,
@@ -558,11 +618,13 @@ def show_history(player_stack, filename=None):
     if num_plots == 1:
         axes = [axes]
 
-    for i, player in enumerate(player_stack[:-1]):
-        # Pass extra axis to plot_strategy
-        axes[i] = player.plot_strategy(axes[i])
-        axes[i].set_ylabel(f"Gen {i}", fontsize=12)
-        axes[i].set_ylim(-0.5, 1)  # Ensure y-limits match plot_strategy
+    for i, player in enumerate(player_stack):
+        if player.policy is not None:
+            axes[i] = player.plot_strategy(axes[i])
+            axes[i].set_ylabel(f"Gen {i}", fontsize=12)
+            axes[i].set_ylim(-0.5, 1)  # Ensure y-limits match plot_strategy
+        else:
+            axes[i].set_visible(False)
 
     plt.xlabel("States", fontsize=12)
     plt.subplots_adjust(hspace=0.3)  # Adjust vertical spacing
@@ -576,16 +638,60 @@ def show_history(player_stack, filename=None):
 
 
 def plot_utility(player_stack, policy, filename=None):
-    player_stack = player_stack[:-1]
-    utils = [x.utility(policy) for x in player_stack]
+    utils = [x.utility(policy) for x in player_stack if x.policy is not None]
 
     plt.figure(figsize=(7,5))
-    plt.plot(utils)
+    plt.plot(utils, marker='o')
     plt.xlabel("Generation")
     plt.ylabel("Utility")
+    plt.title("Utility Over Generations")
     if filename is not None:
         plt.savefig(filename)
         plt.clf()
-    else: plt.show()
+    else: 
+        plt.show()
     plt.close()
     gc.collect()
+
+
+def generation_utility(player_stack):  # Added: New function to calculate utility between consecutive generations
+    utilities = []
+    for i in range(1, len(player_stack)):
+        prev_player = player_stack[i-1]
+        curr_player = player_stack[i]
+        
+        # Skip if either policy is None
+        if prev_player.policy is None or curr_player.policy is None:
+            continue
+        
+        prev_policy = prev_player.policy
+        curr_policy = curr_player.policy
+
+        score = 0
+        for state in range(len(curr_policy)):
+            if curr_policy[state] == prev_policy[state]:
+                score += 1
+            elif curr_policy[state] == 0 or prev_policy[state] == 0:  # Added partial credit
+                score += 0.5
+
+        utilities.append(score / len(curr_policy))
+    return utilities
+
+
+def analyze_signal_gaps(player):  # Added: New function to analyze signal gaps
+    signals = defaultdict(list)
+    for state in range(len(player.policy)):
+        signal = player.policy[state]
+        if signal > 0:
+            signals[signal].append(state)
+
+    results = {}
+    sorted_signals = sorted(signals.keys())
+    for i in range(len(sorted_signals) - 1):
+        current_signal = sorted_signals[i]
+        next_signal = sorted_signals[i + 1]
+        max_signal_i = max(signals[current_signal]) if signals[current_signal] else -1
+        min_signal_next = min(signals[next_signal]) if signals[next_signal] else len(player.policy)
+        results[f"Signal {current_signal} to {next_signal}"] = (max_signal_i, min_signal_next)
+
+    return results
