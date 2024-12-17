@@ -1,3 +1,4 @@
+from typing import Tuple
 import numpy as np
 import gc
 import matplotlib
@@ -27,12 +28,17 @@ def SuppressWarning(func):
 Basic Player. Learning algorithm: K-Nearest Neighbors
 """
 class Player:
-    def __init__(self, policy: NDArray = None, n_signals: int = 2, n_states: int = 100):
+    def __init__(
+            self, policy: NDArray = None, 
+            n_signals: int = 2, n_states: int = 100, 
+            reward_struct: Tuple[float, float, float] = (1., 0.5, 0.)
+    ):
         self.policy = policy
         self.signals = n_signals
         self.states = n_states
         self.trained_neigbors = 5
         self.threshold = 0.5
+        self.reward = reward_struct
         if policy is not None:
             self.given_examples = []
         else:
@@ -168,10 +174,13 @@ class Player:
 
         score = 0
         for state in range(self.states):
-            if self.policy[state] == init_policy[state]:
-                score += 1
-            elif self.policy[state] == 0 or init_policy[state] == 0:  # Added partial credit
-                score += 0.5
+            if self.policy[state] == 0:
+                score += self.reward[1]
+            elif self.policy[state] == init_policy[state]:
+                score += self.reward[0]
+            else:
+                # default: 0. Punishment for changing singals.
+                score += self.reward[2]
 
         return score / self.states
 
@@ -451,10 +460,17 @@ class StrictPlayer(LinearFunctionPlayer):
         self.given_examples = examples
 
     def predict(self, state, bounds):
-        for signal in bounds:
-            if state >= bounds[signal][0] and state <= bounds[signal][1]:
-                return signal
-        return 0      
+        if self.signals > 2:
+            for signal in bounds:
+                if state >= bounds[signal][0] and state <= bounds[signal][1]:
+                    return signal
+            return 0 
+        else:
+            if state <= bounds[1][1]:
+                return 1
+            elif state >= bounds[2][0]:
+                return 2
+            return 0 
 
     def get_predictions(self):
         predictions = np.zeros((self.states, self.signals))
@@ -587,8 +603,7 @@ class NaiveBayesPlayer(SKLearnPlayer):
         X = np.asarray([x[0] for x in examples]).reshape(-1,1)
         y = np.asarray([x[1] for x in examples])
 
-        # clf = GaussianNB()
-        clf = BernoulliNB()
+        clf = GaussianNB()
         clf.fit(X, y)
 
         working_policy = np.zeros(self.states, dtype=np.int64)
@@ -607,11 +622,13 @@ class NaiveBayesPlayer(SKLearnPlayer):
 
 def show_history(player_stack, filename=None):
     num_plots = len(player_stack)
+    num_states = len(player_stack[0].policy)
     fig_height = max(2, num_plots * 1.0)
+    fig_width = max(10, num_states * 0.1)
     fig, axes = plt.subplots(
         nrows=num_plots,
         sharex=True,
-        figsize=(10, fig_height),
+        figsize=(fig_width, fig_height),
     )
 
     # Ensure axes is iterable
@@ -629,7 +646,7 @@ def show_history(player_stack, filename=None):
     plt.xlabel("States", fontsize=12)
     plt.subplots_adjust(hspace=0.3)  # Adjust vertical spacing
     if filename is not None:
-        plt.savefig(filename, dpi=200)
+        plt.savefig(filename, dpi=50, bbox_inches="tight", pad_inches=1)
         plt.clf()
     else: 
         plt.show()
@@ -637,14 +654,15 @@ def show_history(player_stack, filename=None):
     gc.collect()
 
 
-def plot_utility(player_stack, policy, filename=None):
-    utils = [x.utility(policy) for x in player_stack if x.policy is not None]
-
+def plot_utility(utils, filename=None, subtitle=None):
     plt.figure(figsize=(7,5))
     plt.plot(utils, marker='o')
     plt.xlabel("Generation")
     plt.ylabel("Utility")
-    plt.title("Utility Over Generations")
+    if subtitle is not None:
+        plt.title(f"Utility Over Generations: {subtitle}")
+    else:
+        plt.title("Utility Over Generations")
     if filename is not None:
         plt.savefig(filename)
         plt.clf()
@@ -652,6 +670,9 @@ def plot_utility(player_stack, policy, filename=None):
         plt.show()
     plt.close()
     gc.collect()
+
+def single_policy_utility(player_stack, policy):
+    return [x.utility(policy) for x in player_stack if x.policy is not None]
 
 
 def generation_utility(player_stack):  # Added: New function to calculate utility between consecutive generations
@@ -665,16 +686,10 @@ def generation_utility(player_stack):  # Added: New function to calculate utilit
             continue
         
         prev_policy = prev_player.policy
-        curr_policy = curr_player.policy
 
-        score = 0
-        for state in range(len(curr_policy)):
-            if curr_policy[state] == prev_policy[state]:
-                score += 1
-            elif curr_policy[state] == 0 or prev_policy[state] == 0:  # Added partial credit
-                score += 0.5
+        util = curr_player.utility(prev_policy)
 
-        utilities.append(score / len(curr_policy))
+        utilities.append(util)
     return utilities
 
 
