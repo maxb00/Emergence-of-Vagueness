@@ -40,8 +40,8 @@ def main(args):
         initial_policy[i] = (i // step) + 1
 
     # Initialize player stack
-    p0 = lib.LinearFunctionPlayer(policy=initial_policy, n_signals=signals, n_states=states, reward_struct=reward)  
-    p1 = lib.LinearFunctionPlayer(n_signals=signals, n_states=states, reward_struct=reward)  
+    p0 = lib.NaiveBayesPlayer(policy=initial_policy, n_signals=signals, n_states=states, reward_struct=reward)  
+    p1 = lib.NaiveBayesPlayer(n_signals=signals, n_states=states, reward_struct=reward)  
     player_stack = [p0, p1]
 
     # Run generations
@@ -52,7 +52,7 @@ def main(args):
         examples = teacher.poll(samples, sampling_strat=strat)
         learner.learn(examples, threshold)  
 
-        next_gen = lib.LinearFunctionPlayer(n_signals=signals, n_states=states, reward_struct=reward) 
+        next_gen = lib.NaiveBayesPlayer(n_signals=signals, n_states=states, reward_struct=reward) 
         player_stack.append(teacher)
         player_stack.append(learner)
         player_stack.append(next_gen)
@@ -94,8 +94,8 @@ def main(args):
     thresholds = np.arange(0.5, 1.0, 0.1)
     best_thresholds = {}
     for thresh in thresholds:
-        temp_player_stack = [lib.LinearFunctionPlayer(policy=initial_policy.copy(), n_signals=signals, n_states=states)]
-        temp_player_stack.append(lib.LinearFunctionPlayer(n_signals=signals, n_states=states))
+        temp_player_stack = [lib.NaiveBayesPlayer(policy=initial_policy.copy(), n_signals=signals, n_states=states)]
+        temp_player_stack.append(lib.NaiveBayesPlayer(n_signals=signals, n_states=states))
         
         # Run generations with current threshold
         for gen in range(generations):
@@ -105,14 +105,14 @@ def main(args):
             examples = teacher.poll(samples, sampling_strat=strat)
             learner.learn(examples, thresh)
 
-            next_gen = lib.LinearFunctionPlayer(n_signals=signals, n_states=states)
+            next_gen = lib.NaiveBayesPlayer(n_signals=signals, n_states=states)
             temp_player_stack.append(teacher)
             temp_player_stack.append(learner)
             temp_player_stack.append(next_gen)
         
         # Compute utility against initial policy (exclude the last player)
-        utils = lib.single_policy_utility(temp_player_stack[:-1], initial_policy)
-        # temp_gen_utils = lib.generation_utility(temp_player_stack[:-1])
+        # utils = lib.single_policy_utility(temp_player_stack[:-1], initial_policy)
+        utils = lib.generation_utility(temp_player_stack[:-1])
         if utils:
             avg_utility = np.mean(utils)
             best_thresholds[thresh] = avg_utility

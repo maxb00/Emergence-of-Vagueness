@@ -25,10 +25,10 @@ def main(info=None):
   if info == None:
     (nstates, nsignals, nactions, rp1, rp2, null, niter, record) = get_args()
   else:
-    (nstates, nsignals, nactions, rp1, rp2, null, niter, record) = info
+    (nstates, nsignals, nactions, rp1, rp2, null, niter, record, repeat_num) = info
 
   game = SignalingGame(nstates, nsignals, nactions, 
-                       (rp1, rp2), null_signal=null)
+                       (rp1, rp2), null_signal=null, repeat_num=repeat_num)
   game(niter, record)
 
 if __name__ == '__main__':

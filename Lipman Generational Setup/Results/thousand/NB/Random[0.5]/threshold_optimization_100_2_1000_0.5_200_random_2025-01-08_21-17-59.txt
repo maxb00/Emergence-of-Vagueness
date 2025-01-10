@@ -1,0 +1,5 @@
+Threshold: 0.5, Average Utility: 0.9908199999999999
+Threshold: 0.6, Average Utility: 0.9785550000000001
+Threshold: 0.7, Average Utility: 0.9797449999999999
+Threshold: 0.7999999999999999, Average Utility: 0.9811849999999999
+Threshold: 0.8999999999999999, Average Utility: 0.9712899999999999

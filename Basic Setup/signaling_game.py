@@ -1,6 +1,6 @@
 import numpy as np
-
-from agents import Sender, Receiver
+from sklearn.neural_network import MLPClassifier
+from agents import Sender, Receiver, SKSender, SKReciever
 from display import gen_gif
 
 def linear_reward_fn(param: tuple[float, float], null_signal=False):
@@ -63,10 +63,24 @@ class SignalingGame:
 
     self.null_signal = null_signal
 
-    self.random = np.random.default_rng() 
-
-    self.sender = Sender(self.num_states, self.num_signals, null_signal)
-    self.receiver = Receiver(self.num_signals, self.num_actions)
+    self.random = np.random.default_rng()
+    self.sender = Sender(self.num_states, self.num_signals, null_signal) 
+    # self.sender = SKSender(self.num_states, self.num_signals, null_signal)
+    # self.sender.set_classifier(MLPClassifier(
+    #   hidden_layer_sizes=(3,3), 
+    #   random_state=1, 
+    #   solver='adam', 
+    #   alpha=0.1
+    # ))
+    
+    self.reciever = Receiver(self.num_signals, self.num_actions)
+    # self.receiver = SKReciever(self.num_signals, self.num_actions)
+    # self.receiver.set_classifier(MLPClassifier(
+    #   hidden_layer_sizes=(3,3), 
+    #   random_state=1, 
+    #   solver='adam', 
+    #   alpha=0.1
+    # ))
 
     self.curr_state = None
     self.curr_signal = None
@@ -181,7 +195,7 @@ class SignalingGame:
                          "action": self.curr_action,
                          "reward": reward})
   
-  def __call__(self, num_iter: int, record_interval=-1):
+  def __call__(self, num_iter: int, record_interval=-1, repeat_num: int = None):
     """Runs the simulation
 
     Args:
@@ -218,7 +232,10 @@ class SignalingGame:
     if record_interval == -1:
       return
     
-    gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
+    if repeat_num is None:
+      gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
+    else:
+      gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}_{repeat_num}.gif"
     
     gen_gif(self.sender.signal_history, self.receiver.action_history, self.expected_payoff, self.optimal_payoff(), self.info_measure, self.optimal_info(), num_iter, record_interval, 100, gif_filename)
   

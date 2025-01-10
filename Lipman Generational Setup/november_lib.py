@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Type
 import numpy as np
 import gc
 import matplotlib
@@ -716,3 +716,63 @@ def analyze_signal_gaps(player):  # Added: New function to analyze signal gaps
         results[f"Signal {current_signal} to {next_signal}"] = (max_signal_i, min_signal_next)
 
     return results
+
+
+def run_game(
+    initial_policy: NDArray, signals: int, 
+    states: int, generations: int, 
+    samples: int, threshold: float, 
+    strat: str = "random", 
+    reward: Tuple[float, float, float] = [1.0,0.5,0.0],
+    player: Type[Player] = LinearFunctionPlayer
+):
+    p0 = player(policy=initial_policy, n_signals=signals, n_states=states, reward_struct=reward)  
+    p1 = player(n_signals=signals, n_states=states, reward_struct=reward)  
+    player_stack = [p0, p1]
+
+    # Run generations
+    for _ in range(generations):
+        learner = player_stack.pop()
+        teacher = player_stack.pop()
+
+        examples = teacher.poll(samples, sampling_strat=strat)
+        if type(player) == StrictPlayer:
+            learner.learn(examples)
+        elif type(player) == Player:
+            learner.learn(examples, 5, True, threshold)
+        else:
+            learner.learn(examples, threshold) 
+
+        next_gen = player(n_signals=signals, n_states=states, reward_struct=reward) 
+        player_stack.append(teacher)
+        player_stack.append(learner)
+        player_stack.append(next_gen)
+
+    return player_stack
+
+def predict_interpretability(policy: NDArray, player: Type[Player], info: Tuple[int,int,int,float], n_children: int = 100):
+    signals, states, samples, threshold = info
+    p0 = player(policy, signals, states)
+    child_list = []
+    for _ in range(n_children):
+        child = player(n_signals=signals,n_states=states)
+        examples = p0.poll(samples)
+
+        if type(player) == StrictPlayer:
+            child.learn(examples)
+        elif type(player) == Player:
+            child.learn(examples, 5, True, threshold)
+        else:
+            child.learn(examples, threshold)
+
+        child_list.append(child)
+
+    scores = []
+    for i in range(n_children):
+        for j in range(i+1, n_children):
+            child_a = child_list[i]
+            child_b = child_list[j]
+            score = child_a.utility(child_b.policy)
+            scores.append(score)
+    
+    return sum(scores) / len(scores)
