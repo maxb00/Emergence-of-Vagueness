@@ -141,7 +141,7 @@ class Player:
             c = np.asarray([0] * self.signals)
             for n in neighbors:
                 if n[1] - 1 < self.signals:
-                    c[n[1]-1] += 1
+                    c[int(n[1])-1] += 1
             probs = c / k_neighbors
             if np.sum(probs) == 0:
                 return 0, 0  # Return no prediction if no confidence
@@ -736,9 +736,9 @@ def run_game(
         teacher = player_stack.pop()
 
         examples = teacher.poll(samples, sampling_strat=strat)
-        if type(player) == StrictPlayer:
+        if player == StrictPlayer:
             learner.learn(examples)
-        elif type(player) == Player:
+        elif player == Player:
             learner.learn(examples, 5, True, threshold)
         else:
             learner.learn(examples, threshold) 
@@ -758,9 +758,9 @@ def predict_interpretability(policy: NDArray, player: Type[Player], info: Tuple[
         child = player(n_signals=signals,n_states=states)
         examples = p0.poll(samples)
 
-        if type(player) == StrictPlayer:
+        if player == StrictPlayer:
             child.learn(examples)
-        elif type(player) == Player:
+        elif player == Player:
             child.learn(examples, 5, True, threshold)
         else:
             child.learn(examples, threshold)
@@ -768,11 +768,17 @@ def predict_interpretability(policy: NDArray, player: Type[Player], info: Tuple[
         child_list.append(child)
 
     scores = []
+    lo_score = inf
+    lo_pair = (-1, -1)
     for i in range(n_children):
         for j in range(i+1, n_children):
             child_a = child_list[i]
             child_b = child_list[j]
             score = child_a.utility(child_b.policy)
             scores.append(score)
+
+            if score < lo_score:
+                lo_score = score
+                lo_pair = (child_a, child_b)
     
-    return sum(scores) / len(scores)
+    return (sum(scores) / len(scores), lo_score, lo_pair)
