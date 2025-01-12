@@ -73,7 +73,7 @@ class SignalingGame:
     #   alpha=0.1
     # ))
     
-    self.reciever = Receiver(self.num_signals, self.num_actions)
+    self.receiver = Receiver(self.num_signals, self.num_actions)
     # self.receiver = SKReciever(self.num_signals, self.num_actions)
     # self.receiver.set_classifier(MLPClassifier(
     #   hidden_layer_sizes=(3,3), 

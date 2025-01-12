@@ -28,8 +28,8 @@ def main(info=None):
     (nstates, nsignals, nactions, rp1, rp2, null, niter, record, repeat_num) = info
 
   game = SignalingGame(nstates, nsignals, nactions, 
-                       (rp1, rp2), null_signal=null, repeat_num=repeat_num)
-  game(niter, record)
+                       (rp1, rp2), null_signal=null)
+  game(niter, record, repeat_num=repeat_num)
 
 if __name__ == '__main__':
   main()
