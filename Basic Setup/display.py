@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import imageio.v2 as imageio
 import seaborn as sns
 import os
+import matplotlib
+matplotlib.use("TKAgg")
 
 def gen_gif(signal_history: list, action_history: list, ep_fn, opt_payoff: float, info_measure, opt_info: float, num_iter: int, record_interval: int, duration: int, output_file: str):
   """Generates a heatmap gif of the whole simulation and saves it into 
