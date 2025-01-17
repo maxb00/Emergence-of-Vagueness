@@ -235,7 +235,9 @@ class Player:
         assert self.given_examples is not None
 
         predictions = self.get_predictions()
-
+        givens = [state for state, _ in self.given_examples]
+        colors = [signal for _, signal in self.given_examples]
+        givens_y = [0.2] * len(givens)
         # create legend
         labels = [f"Signal {i+1}" for i in range(self.signals)]
         labels.append("Threshold")
@@ -244,6 +246,7 @@ class Player:
         for sig in range(self.signals):
             plt.plot(range(1, self.states+1), predictions[:, sig], label=labels[sig])
         plt.plot(range(1, self.states+1), [self.threshold] * self.states, label=labels[-1], linestyle='--')
+        plt.scatter(givens, givens_y, marker="|", cmap="Set1", c=colors)
         plt.xlim(1, self.states)
         plt.ylim(0, 1)
         plt.xlabel("State")
@@ -348,6 +351,10 @@ class LinearFunctionPlayer(Player):
         assert self.functions is not None
 
         predictions = self.get_predictions()
+        givens = [state for state, _ in self.given_examples]
+        colors = [signal for _, signal in self.given_examples]
+        givens_y = [0.2] * len(givens)
+        
 
         # create legend
         labels = [f"Signal {i+1}" for i in range(self.signals)]
@@ -357,6 +364,7 @@ class LinearFunctionPlayer(Player):
         for sig in range(self.signals):
             plt.plot(range(1, self.states+1), predictions[:, sig], label=labels[sig])
         plt.plot(range(1, self.states+1), [self.threshold] * self.states, label=labels[-1], linestyle='--')
+        plt.scatter(givens, givens_y, marker="|", cmap="Set1", c=colors)
         plt.xlim(0, self.states + 1)
         plt.ylim(-0.1, 1.1)
         plt.xlabel("State")
@@ -513,6 +521,11 @@ class SKLearnPlayer(Player):
             preds = self.classifier.predict_proba(np.array([[state]]))
             predictions[state] = preds
 
+        givens = [state for state, _ in self.given_examples]
+        colors = [signal for _, signal in self.given_examples]
+        givens_y = [0.2] * len(givens)
+        
+
         # create legend
         labels = [f"Signal {i+1}" for i in range(self.signals)]
         labels.append("Threshold")
@@ -521,6 +534,7 @@ class SKLearnPlayer(Player):
         for sig in range(self.signals):
             plt.plot(range(1, self.states+1), predictions[:, sig], label=labels[sig])
         plt.plot(range(1, self.states+1), [self.threshold] * self.states, label=labels[-1], linestyle='--')
+        plt.scatter(givens, givens_y, marker="|", cmap="Set1", c=colors)
         plt.xlim(1, self.states)
         plt.ylim(0, 1)
         plt.xlabel("State")

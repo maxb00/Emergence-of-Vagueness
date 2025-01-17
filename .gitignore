@@ -1,0 +1,5 @@
+*/__pycache__/
+*/images/
+Test*Setup/
+gurobi/license.toml
+*.DS_Store
