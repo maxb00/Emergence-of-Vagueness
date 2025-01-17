@@ -8,8 +8,8 @@ average_results = data.groupby(['threshold', 'algorithm'])[['util_gen2gen', 'uti
 
 # Map new algorithm display names
 algorithm_display_names = {
-    'LRPlayer': 'Linear Regression',
-    'LinearFunctionPlayer': 'Linear Function',
+    'LRPlayer': 'Logistic Regression',
+    'LinearFunctionPlayer': 'Linear',
     'MLPPlayer': 'MLP',
     'Player': 'KNN',
     'SigmoidPlayer': 'Sigmoid',
