@@ -1,19 +1,40 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-file_path = 'results.csv'  
+file_path = 'results.csv'
 data = pd.read_csv(file_path)
 
 average_results = data.groupby(['threshold', 'algorithm'])[['util_gen2gen', 'util_gen2ground']].mean().reset_index()
+
+# Map new algorithm display names
+algorithm_display_names = {
+    'LRPlayer': 'Linear Regression',
+    'LinearFunctionPlayer': 'Linear Function',
+    'MLPPlayer': 'MLP',
+    'Player': 'KNN',
+    'SigmoidPlayer': 'Sigmoid',
+    'Strict': 'Strict'
+}
+
+# Replace algorithm names for display purposes
+average_results['algorithm'] = average_results['algorithm'].map(algorithm_display_names)
 
 # Pivot the data for plotting
 pivoted_gen2gen = average_results.pivot(index='threshold', columns='algorithm', values='util_gen2gen')
 pivoted_gen2ground = average_results.pivot(index='threshold', columns='algorithm', values='util_gen2ground')
 
+# Get the average utility for Strict player
+strict_gen2gen = pivoted_gen2gen['Strict'].mean()
+strict_gen2ground = pivoted_gen2ground['Strict'].mean()
+
 # Plot the util_gen2gen graph
 plt.figure(figsize=(10, 6))
 for algorithm in pivoted_gen2gen.columns:
-    plt.plot(pivoted_gen2gen.index, pivoted_gen2gen[algorithm], label=algorithm)
+    if algorithm == 'Strict':
+        # Plot a horizontal line for Strict
+        plt.axhline(y=strict_gen2gen, color='gray', linestyle='--', label=f'{algorithm} (Constant)')
+    else:
+        plt.plot(pivoted_gen2gen.index, pivoted_gen2gen[algorithm], label=algorithm)
 
 plt.title('Algorithm Comparison by Threshold (Gen-to-Gen)', fontsize=14)
 plt.xlabel('Threshold', fontsize=12)
@@ -28,7 +49,11 @@ plt.show()
 # Plot the util_gen2ground graph
 plt.figure(figsize=(10, 6))
 for algorithm in pivoted_gen2ground.columns:
-    plt.plot(pivoted_gen2ground.index, pivoted_gen2ground[algorithm], label=algorithm)
+    if algorithm == 'Strict':
+        # Plot a horizontal line for Strict
+        plt.axhline(y=strict_gen2ground, color='gray', linestyle='--', label=f'{algorithm} (Constant)')
+    else:
+        plt.plot(pivoted_gen2ground.index, pivoted_gen2ground[algorithm], label=algorithm)
 
 plt.title('Algorithm Comparison by Threshold (Gen-to-Ground)', fontsize=14)
 plt.xlabel('Threshold', fontsize=12)
