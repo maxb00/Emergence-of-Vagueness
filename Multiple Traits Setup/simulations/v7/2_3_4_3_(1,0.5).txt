@@ -1,0 +1,7 @@
+python main.py 2 3 4 3 1 0.5 4000
+
+AVERAGE
+Unweighted trait 1's low|medium|high: 2.20157 | 1.72341 | 2.40936
+Unweighted trait 2's low|medium|high: 2.24516 | 1.74036 | 2.34883
+Weighted trait 1's low|medium|high: 0.31325 | 0.48280 | 0.33027
+Weighted trait 2's low|medium|high: 0.32587 | 0.48308 | 0.31738

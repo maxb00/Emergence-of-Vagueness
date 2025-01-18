@@ -1,0 +1,52 @@
+GLPSOL: GLPK LP/MIP Solver, v4.65
+Parameter(s) specified in the command line:
+ --model LP.mod --wmps model.mps
+Reading model section from LP.mod...
+Reading data section from LP.mod...
+137 lines were read
+Generating EP...
+Generating kBucketConstr...
+Generating uniqueBucketConstr...
+Generating nonexBucketConstr...
+Model has been successfully generated
+Writing problem data to 'model.mps'...
+3127 records were written
+GLPK Integer Optimizer, v4.65
+758 rows, 729 columns, 2691 non-zeros
+729 integer variables, all of which are binary
+Preprocessing...
+730 rows, 729 columns, 2160 non-zeros
+729 integer variables, all of which are binary
+Scaling...
+ A: min|aij| =  1.000e+00  max|aij| =  1.000e+00  ratio =  1.000e+00
+Problem data seem to be well scaled
+Constructing initial basis...
+Size of triangular part is 730
+Solving LP relaxation...
+GLPK Simplex Optimizer, v4.65
+730 rows, 729 columns, 2160 non-zeros
+      0: obj =  -4.657500000e-01 inf =   1.000e+01 (2)
+      5: obj =  -1.523000000e-01 inf =   0.000e+00 (0)
+*   224: obj =   6.790500000e-01 inf =   2.065e-14 (0) 1
+OPTIMAL LP SOLUTION FOUND
+Integer optimization begins...
+Long-step dual simplex will be used
++   224: mip =     not found yet <=              +inf        (1; 0)
++   224: >>>>>   6.790500000e-01 <=   6.790500000e-01   0.0% (1; 0)
++   224: mip =   6.790500000e-01 <=     tree is empty   0.0% (0; 1)
+INTEGER OPTIMAL SOLUTION FOUND
+Time used:   0.0 secs
+Memory used: 1.9 Mb (1980226 bytes)
+STATES:
+[1 2 3]   [10 11 12]   [19 20 21]
+[4 5 6] , [13 14 15] , [22 23 24].
+[7 8 9]   [16 17 18]   [25 26 27]
+
+BUCKETS:
+Bucket 5: 1 2 3 4 5 6 7 8 9
+Bucket 11: 11 12 19 21
+Bucket 13: 10 13
+Bucket 14: 14 15
+Bucket 17: 16 17 18 25 26 27
+Bucket 23: 20 22 23 24
+Model has been successfully processed
