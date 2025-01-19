@@ -1,4 +1,4 @@
-from typing import Tuple, Type
+from typing import List, Tuple, Type
 import numpy as np
 import gc
 import matplotlib
@@ -764,20 +764,17 @@ def run_game(
 
     return player_stack
 
-def predict_interpretability(policy: NDArray, player: Type[Player], info: Tuple[int,int,int,float], n_children: int = 100):
+def predict_interpretability(examples: List, player: Type[Player], info: Tuple[int,int,int,float], n_children: int = 100):
     signals, states, samples, threshold = info
-    p0 = player(policy, signals, states)
     child_list = []
-    for _ in range(n_children):
+    for ex in examples:
         child = player(n_signals=signals,n_states=states)
-        examples = p0.poll(samples)
-
         if player == StrictPlayer:
-            child.learn(examples)
+            child.learn(ex)
         elif player == Player:
-            child.learn(examples, 5, True, threshold)
+            child.learn(ex, 5, True, threshold)
         else:
-            child.learn(examples, threshold)
+            child.learn(ex, threshold)
 
         child_list.append(child)
 
