@@ -793,3 +793,20 @@ def predict_interpretability(examples: List, player: Type[Player], info: Tuple[i
                 lo_pair = (child_a, child_b)
     
     return (sum(scores) / len(scores), lo_score, lo_pair)
+
+
+def get_sample_bounds(player: Player):
+    assert player.given_examples is not None
+    bounds = {}
+    for signal in range(1, player.signals+1):
+        low = inf
+        high = -inf
+        for ex in player.given_examples:
+            state, sig = ex
+            if sig == signal:
+                if low > state:
+                    low = state
+                if high < state:
+                    high = state
+        bounds[signal] = (low, high)
+    return bounds
