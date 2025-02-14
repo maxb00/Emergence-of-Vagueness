@@ -1,5 +1,21 @@
 from copy import deepcopy
+import pdb
 import numpy as np
+from warnings import catch_warnings
+
+def RaiseWarning(func):
+    def wrapper(*args, **kwargs):
+        with catch_warnings(action="error"):
+            return func(*args, **kwargs)
+    return wrapper
+
+def transform(value):
+  if value == 0:
+    return 1
+  if value < 1:
+    return 1/((value-1)**2)
+  else:
+    return (value+1)**2
 
 def norm(arr):
   exp = np.exp(arr)
@@ -46,6 +62,7 @@ class Sender:
 
     self.signal_history = []
 
+  @RaiseWarning
   def gen_signal(self, state: int, record=False) -> int:
     """Generates a signal based on the state (hard-coded for now)
     
@@ -55,10 +72,17 @@ class Sender:
     Returns:
       int: a signal. -1 indicates a null signal
     """
-    exp = np.exp(self.signal_weights)
-    sum_exp = np.sum(exp, axis=0)
-    prob = exp / sum_exp
-    signal = np.random.choice(self.num_signals, p=prob.T[state])
+    try:
+      transformation_vector = np.vectorize(transform)
+      transformed_weights = transformation_vector(self.signal_weights)
+      col_sums = np.sum(transformed_weights, axis=0)
+      prob = transformed_weights / col_sums
+    except RuntimeWarning:
+      pdb.set_trace()
+    try:
+      signal = np.random.choice(self.num_signals, p=prob.T[state])
+    except ValueError:
+      pdb.set_trace()
     if self.null_signal and signal == self.num_signals-1:
       signal = -1
     self.curr_signal = signal
@@ -132,6 +156,7 @@ class Receiver:
 
     self.action_history = []
 
+  @RaiseWarning
   def gen_action(self, signal: int, record=False) -> int:
     """Generates an action based on a signal
 
@@ -142,9 +167,13 @@ class Receiver:
     Returns:
       int: an action
     """
-    exp = np.exp(self.action_weights)
-    sum_exp = np.sum(exp, axis=1)
-    prob = exp.T / sum_exp
+    try:
+      transformation_vector = np.vectorize(transform)
+      transformed_weights = transformation_vector(self.action_weights)
+      row_sums = np.sum(transformed_weights, axis=1)
+      prob = transformed_weights.T / row_sums
+    except RuntimeWarning:
+      pdb.set_trace()
     if signal == -1:
       action = -1
     else:
