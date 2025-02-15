@@ -6,6 +6,7 @@
 # main thing to track: when and where are null signals sent?
 from signaling_game import SignalingGame
 import pdb
+from tqdm import tqdm
 spreads = [0.75, 0.6, 0.5, 0.3, 0.25, 0.1, 0.01]
 
 # constants
@@ -13,13 +14,14 @@ states = 20
 signals = 2
 actions = 20
 reward_magnitude = 1 # c
-iterations = 40_000
+iterations = 100_000
+repeats = 5
 
-game = SignalingGame(
-    states, signals, actions, 
-    (reward_magnitude, spreads[3]), True
-)
+for d in tqdm(spreads):
+    for repeat in range(repeats):
+        game = SignalingGame(
+            states, signals, actions, 
+            (reward_magnitude, d), True
+        )
 
-game(iterations, 100)
-
-pdb.set_trace()
+        game(iterations, 100, repeat)
