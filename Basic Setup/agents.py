@@ -11,11 +11,10 @@ def RaiseWarning(func):
 
 def transform(value):
   if value == 0:
-    return 1
-  if value < 1:
-    return 1/((value-1)**2)
-  else:
-    return (value+1)**2
+    return 1.0
+  elif value < 1:
+    return 1.0/((value-1.0)**2)
+  return (value+1.0)**2
 
 def norm(arr):
   exp = np.exp(arr)
@@ -73,7 +72,7 @@ class Sender:
       int: a signal. -1 indicates a null signal
     """
     try:
-      transformation_vector = np.vectorize(transform)
+      transformation_vector = np.vectorize(transform, otypes=[float])
       transformed_weights = transformation_vector(self.signal_weights)
       col_sums = np.sum(transformed_weights, axis=0)
       prob = transformed_weights / col_sums
@@ -168,7 +167,7 @@ class Receiver:
       int: an action
     """
     try:
-      transformation_vector = np.vectorize(transform)
+      transformation_vector = np.vectorize(transform, otypes=[float])
       transformed_weights = transformation_vector(self.action_weights)
       row_sums = np.sum(transformed_weights, axis=1)
       prob = transformed_weights.T / row_sums

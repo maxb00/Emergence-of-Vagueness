@@ -18,7 +18,7 @@ iterations = 100_000
 repeats = 5
 
 for d in tqdm(spreads):
-    for repeat in range(repeats):
+    for repeat in tqdm(range(repeats)):
         game = SignalingGame(
             states, signals, actions, 
             (reward_magnitude, d), True
