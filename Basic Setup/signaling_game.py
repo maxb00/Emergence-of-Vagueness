@@ -2,7 +2,7 @@ import numpy as np
 import csv  # Added for saving null-signal usage results
 from sklearn.neural_network import MLPClassifier
 from agents import Sender, Receiver, SKSender, SKReciever
-from display import gen_gif
+from display import gen_gif, gen_single_heatmap
 import os
 import csv
 
@@ -207,7 +207,7 @@ class SignalingGame:
             "reward": reward
         })
 
-    def __call__(self, num_iter: int, record_interval=-1, repeat_num: int = None):
+    def __call__(self, num_iter: int, record_interval=-1, repeat_num: int = None, make_gif: bool = True):
         """Runs the simulation
 
         Args:
@@ -237,7 +237,7 @@ class SignalingGame:
             self.reciever.update(self.history[-1])
 
         # Generate a GIF if requested
-        if record_interval != -1:
+        if record_interval != -1 and make_gif:
             if repeat_num is None:
                 gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.gif"
             else:
@@ -255,6 +255,24 @@ class SignalingGame:
                 duration=100,
                 output_file=gif_filename
             )
+        else:
+            if repeat_num is None:
+                gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}.jpg"
+            else:
+                gif_filename = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}_{repeat_num}.jpg"
+            gen_single_heatmap(
+                self.sender.signal_history,
+                self.reciever.action_history,
+                self.expected_payoff,
+                self.optimal_payoff(),
+                self.info_measure,
+                self.optimal_info(),
+                num_iter,
+                record_interval,
+                duration=100,
+                output_file=gif_filename
+            )
+            
 
         # Count and store how often the null signal was used 
         if self.null_signal:
@@ -277,6 +295,11 @@ class SignalingGame:
                     frac = 0
                 print(f"{s:5d} : {null_usage_by_state[s]:13d} : {state_counts[s]:17d} : {frac:12.3f}")
 
+
+            # get final strategy
+            final_signal_probs = self.sender.signal_history[-1]
+            final_action_probs = self.reciever.action_history[-1]
+
             # Store the usage stats in a CSV
             run_id = repeat_num if repeat_num is not None else 'none'
             csv_dir = f"./simulations/{self.num_states}_{self.num_signals}_{self.num_actions}"
@@ -287,10 +310,12 @@ class SignalingGame:
             )
             with open(csv_filename, "w", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow(["state", "null_count", "total_count", "null_fraction"])
+                writer.writerow(["state", "null_count", "total_count", "null_fraction","sn_sg_0","sn_sg_1","sn_sg_null","rc_sg_0", "rc_sg_1"])
                 for s in range(self.num_states):
                     if state_counts[s] > 0:
                         frac = null_usage_by_state[s] / state_counts[s]
                     else:
                         frac = 0
-                    writer.writerow([s, null_usage_by_state[s], state_counts[s], frac])
+                    sg_prb = final_signal_probs[:, s]
+                    ac_prb = final_action_probs[:, s]
+                    writer.writerow([s, null_usage_by_state[s], state_counts[s], frac, sg_prb[0], sg_prb[1], sg_prb[2], ac_prb[0], ac_prb[1]])

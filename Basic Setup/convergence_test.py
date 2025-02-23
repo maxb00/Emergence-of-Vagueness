@@ -14,7 +14,7 @@ states = 20
 signals = 2
 actions = 20
 reward_magnitude = 1 # c
-iterations = 100_000
+iterations = 2_000
 repeats = 5
 
 for d in tqdm(spreads):
@@ -24,4 +24,6 @@ for d in tqdm(spreads):
             (reward_magnitude, d), True
         )
 
-        game(iterations, 100, repeat)
+        game(iterations, 100, repeat, False)
+
+        pdb.set_trace()
