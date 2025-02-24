@@ -7,15 +7,15 @@
 from signaling_game import SignalingGame
 import pdb
 from tqdm import tqdm
-spreads = [0.75, 0.6, 0.5, 0.3, 0.25, 0.1, 0.01]
+spreads = [0.35, 0.32, 0.31, 0.3, 0.25, 0.2]
 
 # constants
 states = 20
 signals = 2
 actions = 20
 reward_magnitude = 1 # c
-iterations = 2_000
-repeats = 5
+iterations = 100_000
+repeats = 10
 
 for d in tqdm(spreads):
     for repeat in tqdm(range(repeats)):
@@ -26,4 +26,4 @@ for d in tqdm(spreads):
 
         game(iterations, 100, repeat, False)
 
-        pdb.set_trace()
+        # pdb.set_trace()
