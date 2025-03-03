@@ -7,7 +7,7 @@
 from signaling_game import SignalingGame
 import pdb
 from tqdm import tqdm
-spreads = [0.35, 0.32, 0.31, 0.3, 0.25, 0.2]
+spreads = [0.3, 0.25, 0.2]
 
 # constants
 states = 20
@@ -15,7 +15,7 @@ signals = 2
 actions = 20
 reward_magnitude = 1 # c
 iterations = 100_000
-repeats = 10
+repeats = 100
 
 for d in tqdm(spreads):
     for repeat in tqdm(range(repeats)):

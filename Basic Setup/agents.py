@@ -194,17 +194,18 @@ class Receiver:
     reward = curr_game["reward"]
     self.action_weights[signal, action] += reward
 
-    l = r = action
-    for i in range(1,4):
-      stimgen_reward = stimgen(i) * reward
+    # 3/3/25 - removed reci stimgen
+    # l = r = action
+    # for i in range(1,4):
+    #   stimgen_reward = stimgen(i) * reward
 
-      r += 1
-      if r < self.num_actions:
-        self.action_weights[signal, r] += stimgen_reward
+    #   r += 1
+    #   if r < self.num_actions:
+    #     self.action_weights[signal, r] += stimgen_reward
 
-      l -= 1
-      if l >= 0:
-        self.action_weights[signal, l] += stimgen_reward
+    #   l -= 1
+    #   if l >= 0:
+    #     self.action_weights[signal, l] += stimgen_reward
 
   def print_action_prob(self):
     """Prints the current action probabilities"""
