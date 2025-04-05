@@ -202,7 +202,7 @@ class Player:
             else:
                 color = cmp[signal-1]
             
-            rect = patches.Rectangle((i, 0), 1, 1, linewidth=1, edgecolor="black", facecolor=color)
+            rect = patches.Rectangle((0, i), 1, 1, linewidth=1, edgecolor="black", facecolor=color)
             ax.add_patch(rect)
             
         # Plot numbers at the sampled positions
@@ -210,12 +210,12 @@ class Player:
             # Plot the actual signal number at the sampled position
             signal = givens[i]
             # Move the numbers down a little bit for readability
-            ax.text(i + 0.5, -0.2, str(signal), ha='center', va='center', fontsize=8, color='red')
+            ax.text(1.3, i, str(signal), ha='center', va='center', fontsize=6, color='red')
         
         # Adjust plot limits to show the numbers
-        ax.set_xlim(0, self.states)
-        ax.set_ylim(-0.5, 1)
-        ax.set_yticks([])
+        ax.set_ylim(0, self.states)
+        ax.set_xlim(-0.5, 1.4)
+        ax.set_xticks([])
 
         return ax
 
@@ -643,13 +643,14 @@ class NaiveBayesPlayer(SKLearnPlayer):
 def show_history(player_stack, filename=None):
     num_plots = len(player_stack)
     num_states = len(player_stack[0].policy)
-    fig_height = max(2, num_plots * 1.0)
-    fig_width = max(10, num_states * 0.1)
-    fig, axes = plt.subplots(
-        nrows=num_plots,
-        sharex=True,
+    fig_width = max(2, num_plots * 1.0)
+    fig_height = max(10, num_states * 0.1)
+    _, axes = plt.subplots(
+        ncols=num_plots,
+        sharey=True,
         figsize=(fig_width, fig_height),
     )
+    plt.ylabel("States", fontsize=12)
 
     # Ensure axes is iterable
     if num_plots == 1:
@@ -658,12 +659,12 @@ def show_history(player_stack, filename=None):
     for i, player in enumerate(player_stack):
         if player.policy is not None:
             axes[i] = player.plot_strategy(axes[i])
-            axes[i].set_ylabel(f"Gen {i}", fontsize=12)
-            axes[i].set_ylim(-0.5, 1)  # Ensure y-limits match plot_strategy
+            axes[i].set_xlabel(f"Gen {i}", fontsize=12)
+            axes[i].set_xlim(-0.5, 1.4)  # Ensure y-limits match plot_strategy
         else:
             axes[i].set_visible(False)
 
-    plt.xlabel("States", fontsize=12)
+    
     plt.subplots_adjust(hspace=0.3)  # Adjust vertical spacing
     if filename is not None:
         plt.savefig(filename, dpi=50, bbox_inches="tight", pad_inches=1)
