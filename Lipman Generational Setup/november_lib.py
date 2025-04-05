@@ -210,7 +210,7 @@ class Player:
             # Plot the actual signal number at the sampled position
             signal = givens[i]
             # Move the numbers down a little bit for readability
-            ax.text(1.3, i, str(signal), ha='center', va='center', fontsize=6, color='red')
+            ax.text(1.2, i+0.5, str(signal), ha='center', va='center', fontsize=6, color='red')
         
         # Adjust plot limits to show the numbers
         ax.set_ylim(0, self.states)
@@ -645,12 +645,11 @@ def show_history(player_stack, filename=None):
     num_states = len(player_stack[0].policy)
     fig_width = max(2, num_plots * 1.0)
     fig_height = max(10, num_states * 0.1)
-    _, axes = plt.subplots(
+    fig, axes = plt.subplots(
         ncols=num_plots,
         sharey=True,
         figsize=(fig_width, fig_height),
     )
-    plt.ylabel("States", fontsize=12)
 
     # Ensure axes is iterable
     if num_plots == 1:
@@ -664,10 +663,10 @@ def show_history(player_stack, filename=None):
         else:
             axes[i].set_visible(False)
 
-    
+    axes[0].set_ylabel("States", fontsize=12)
     plt.subplots_adjust(hspace=0.3)  # Adjust vertical spacing
     if filename is not None:
-        plt.savefig(filename, dpi=50, bbox_inches="tight", pad_inches=1)
+        plt.savefig(filename, dpi=200, bbox_inches="tight", pad_inches=1)
         plt.clf()
     else: 
         plt.show()
