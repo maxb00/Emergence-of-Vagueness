@@ -1,14 +1,14 @@
 from main import main
 
 def run():
-  n_lst = [20, 30] # num states
+  n_lst = [20] # num states
   k_lst = [2] # num signals
   # reward c - (d * abs(state - action))
   c = 1 # reward param 1
-  d_lst = [0.5, 0.3, 0.25] # reward param 2
-  i = 3000 # number of rollouts per game
+  d_lst = [0.3] # reward param 2
+  i = 100_000 # number of rollouts per game
   r = 25 # number of generations between image creation
-  repeats = 10
+  repeats = 1
   
   for n in n_lst:
     for k in k_lst:

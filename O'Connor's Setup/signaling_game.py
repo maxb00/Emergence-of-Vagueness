@@ -476,6 +476,23 @@ class SignalingGame:
 
     return inf
   
+
+  def info_measure_best_sig(self, signal_prob) -> float:
+      prob = (signal_prob.T / np.sum(signal_prob, axis=1)).T
+
+      aggregate_info_measure = 0
+      for state in range(self.num_states):
+          state_info_measure = []
+          for signal in range(self.num_signals):
+              if self.null_signal and signal == self.num_signals:
+                  break
+              # Note: given uniform state prior, prob[signal, state] * self.num_states = prob[signal, state] / P(state)
+              signal_info_measure = prob[signal, state] * np.log(prob[signal, state] * self.num_states)
+              state_info_measure.append(signal_info_measure)
+          aggregate_info_measure += max(state_info_measure)
+      return aggregate_info_measure
+
+  
   def optimal_info(self) -> float:
     opt_m = 2 * (self.reward_param[0] // self.reward_param[1]) + 1
     m_null = self.num_states - self.num_signals * opt_m

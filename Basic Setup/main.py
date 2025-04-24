@@ -29,7 +29,7 @@ def main(info=None):
 
   game = SignalingGame(nstates, nsignals, nactions, 
                        (rp1, rp2), null_signal=null)
-  game(niter, record, repeat_num=repeat_num)
+  game(niter, record, repeat_num=repeat_num, make_gif=False)
 
 if __name__ == '__main__':
   main()

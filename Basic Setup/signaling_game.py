@@ -160,16 +160,33 @@ class SignalingGame:
         # Normalize each row to sum to 1
         prob = (signal_prob.T / np.sum(signal_prob, axis=1)).T
 
-        inf = 0
+        inf = 0 # total info measure
         for i in range(self.num_signals):
             if self.null_signal and i == self.num_signals:
                 break
-            inf_sig = 0
+            inf_sig = 0 # info measure of signal i
             for j in range(self.num_states):
                 if prob[i, j] > 0:
                     inf_sig += prob[i, j] * np.log(prob[i, j] * self.num_states)
             inf += (np.sum(signal_prob[i]) / self.num_states) * inf_sig
         return inf
+    
+
+    def info_measure_best_sig(self, signal_prob) -> list[float]:
+        prob = (signal_prob.T / np.sum(signal_prob, axis=1)).T
+
+        aggregate_info_measure = []
+        for state in range(self.num_states):
+            state_info_measure = []
+            for signal in range(self.num_signals):
+                if self.null_signal and signal == self.num_signals:
+                    continue
+                # Note: given uniform state prior, prob[signal, state] * self.num_states = prob[signal, state] / P(state)
+                signal_info_measure = prob[signal, state] * np.log(prob[signal, state] * self.num_states)
+                state_info_measure.append(signal_info_measure)
+            aggregate_info_measure.append(max(state_info_measure))
+        return aggregate_info_measure
+
 
     def optimal_info(self) -> float:
         """A rough estimate of the 'optimal' info measure for comparison."""
@@ -248,7 +265,7 @@ class SignalingGame:
                 self.reciever.action_history,
                 self.expected_payoff,
                 self.optimal_payoff(),
-                self.info_measure,
+                self.info_measure_best_sig,
                 self.optimal_info(),
                 num_iter,
                 record_interval,
@@ -265,7 +282,7 @@ class SignalingGame:
                 self.reciever.action_history,
                 self.expected_payoff,
                 self.optimal_payoff(),
-                self.info_measure,
+                self.info_measure_best_sig,
                 self.optimal_info(),
                 num_iter,
                 record_interval,

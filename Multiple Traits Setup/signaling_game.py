@@ -406,6 +406,48 @@ class SignalingGame:
 
     return inf, inf_sigs, inf_states
   
+
+  def info_measure_best_signal(self, signal_prob, weighted=True) -> float:
+    signal_prob = signal_prob.reshape(self.num_signals, self.total_states)
+
+    prob = np.zeros_like(signal_prob)
+    for i in range(self.num_signals):
+      for j in range(self.total_states):
+        prob[i, j] = signal_prob[i, j] * self.state_prob[j]
+
+    # for weighted version    
+    prob_sig = [np.sum(prob[i]) for i in range(self.num_signals)]
+
+    prob = (prob.T / np.sum(prob, axis=1)).T
+
+    aggregate_info_measure = 0
+    info_by_signal = [] # I'm not really sure what this stores...
+    info_by_state_by_signal = []
+    for state in range(self.total_states):
+      state_info_measure = []
+      for signal in range(self.num_signals):
+        if self.null_signal and i == self.num_signals:
+          break
+        if len(info_by_state_by_signal) <= signal:
+          info_by_state_by_signal.append([])
+        signal_info_measure = prob[signal, state] * np.log(prob[signal, state] / self.state_prob[j])
+        info_by_signal[signal] += signal_info_measure
+        if weighted:
+          signal_info_measure *= prob_sig[signal]
+        state_info_measure.append(signal_info_measure)
+        info_by_state_by_signal[signal].append(signal_info_measure)
+      aggregate_info_measure += max(state_info_measure)
+    if weighted:
+      for i in range(len(info_by_signal)):
+        info_by_signal[i] *= prob_sig[signal]
+
+    new_size = [self.num_signals]
+    new_size.extend([self.num_states] * self.num_traits)
+    info_by_state_by_signal = np.resize(np.array(info_by_state_by_signal), tuple(new_size))
+
+    return aggregate_info_measure, info_by_signal, info_by_state_by_signal
+        
+  
   # HARD_CODED FOR 2 TRAITS
   def info_measure_by_trait(self, signal_prob, weighted=True) -> float:
     """Calculates the information content by trait
