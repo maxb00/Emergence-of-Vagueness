@@ -1,0 +1,2 @@
+Reward function: 1-0.015x
+Stimulus generalization curve: 1 / (2**((n**2) * 0.002))
