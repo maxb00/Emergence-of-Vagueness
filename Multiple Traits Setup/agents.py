@@ -1,10 +1,28 @@
 import numpy as np
+from warnings import catch_warnings
+import pdb
+
+
+def RaiseWarning(func):
+    def wrapper(*args, **kwargs):
+        with catch_warnings(action="error"):
+            return func(*args, **kwargs)
+    return wrapper
+
+# new "normalization" cast to avoid overflow
+def transform(value):
+  if value == 0:
+    return 1.0
+  elif value < 1:
+    return 1.0/((value-1.0)**2)
+  return (value+1.0)**2
 
 def norm(arr):
   """Normalizes the weights into probabilities"""
-  exp = np.exp(arr)
-  exp_sum = np.sum(exp)
-  return exp / exp_sum * 100
+  transformation_vector = np.vectorize(transform, otypes=[float])
+  transformed_weights = transformation_vector(arr)
+  col_sums = np.sum(transformed_weights, axis=0)
+  return transformed_weights / col_sums
 
 def stimgen(n: int) -> float:
   """Stimulus generalization function
@@ -41,7 +59,7 @@ class Sender:
     """
     self.num_traits = num_traits
     self.num_states = num_states
-    self.num_signals = num_signals + (1 if null_signal else 0)
+    self.num_signals = num_signals
 
     self.total_states = num_states**num_traits
 
@@ -51,6 +69,7 @@ class Sender:
 
     self.signal_history = []
 
+  @RaiseWarning
   def gen_signal(self, state: int, record=False) -> int:
     """Generates a signal based on the state 
     
@@ -60,10 +79,17 @@ class Sender:
     Returns:
       int: a signal. -1 indicates a null signal
     """
-    exp = np.exp(self.signal_weights)
-    sum_exp = np.sum(exp, axis=0)
-    prob = exp / sum_exp
-    signal = np.random.choice(self.num_signals, p=prob.T[state])
+    try:
+      transformation_vector = np.vectorize(transform, otypes=[float])
+      transformed_weights = transformation_vector(self.signal_weights)
+      col_sums = np.sum(transformed_weights, axis=0)
+      prob = transformed_weights / col_sums
+    except RuntimeWarning:
+      pdb.set_trace()
+    try:
+      signal = np.random.choice(self.num_signals, p=prob.T[state])
+    except ValueError:
+      pdb.set_trace()
     if self.null_signal and signal == self.num_signals-1:
       signal = -1
     self.curr_signal = signal
@@ -85,28 +111,17 @@ class Sender:
     reward = curr_game["reward"]
     self.signal_weights[signal, state] += reward
 
-    maxw = np.max(self.signal_weights[:, state])
-    minw = np.min(self.signal_weights[:, state])
+    l = r = state
+    for i in range(1,4):
+      stimgen_reward = stimgen(i) * reward
 
-    # Setting the range of weights from -300 to 300
-    if maxw - minw > 600:
-      self.signal_weights[:, state] = (self.signal_weights[:, state] - minw) * 600 / (maxw - minw) + minw
-    elif maxw > 300:
-      self.signal_weights[:, state] -= maxw - 300
-    elif minw < -300:
-      self.signal_weights[:, state] += -300 - minw
+      r += 1
+      if r < self.num_states:
+        self.signal_weights[signal, r] += stimgen_reward
 
-    # l = r = state
-    # for i in range(1,4):
-    #   stimgen_reward = stimgen(i) * reward
-
-    #   r += 1
-    #   if r < self.num_states:
-    #     self.signal_weights[signal, r] += stimgen_reward
-
-    #   l -= 1
-    #   if l >= 0:
-    #     self.signal_weights[signal, l] += stimgen_reward
+      l -= 1
+      if l >= 0:
+        self.signal_weights[signal, l] += stimgen_reward
 
   def print_signal_prob(self):
     """Prints the current signal probabilities"""
@@ -121,7 +136,7 @@ class Sender:
     for i in range(self.num_signals):
       print(f'{i:3}', end=' ')
       for j in range(self.total_states):
-        print(f'{int(prob[i, j]):3}', end=' ')
+        print(f'{float(prob[i, j]):.2f}', end=' ')
       print()
   
 class Receiver:
@@ -155,6 +170,7 @@ class Receiver:
 
     self.action_history = []
 
+  @RaiseWarning
   def gen_action(self, signal: int, record=False) -> int:
     """Generates an action based on a signal
 
@@ -165,9 +181,13 @@ class Receiver:
     Returns:
       int: an action
     """
-    exp = np.exp(self.action_weights)
-    sum_exp = np.sum(exp, axis=1)
-    prob = exp.T / sum_exp
+    try:
+      transformation_vector = np.vectorize(transform, otypes=[float])
+      transformed_weights = transformation_vector(self.action_weights)
+      row_sums = np.sum(transformed_weights, axis=1)
+      prob = transformed_weights.T / row_sums
+    except RuntimeWarning:
+      pdb.set_trace()
     if signal == -1:
       action = -1
     else:
@@ -189,19 +209,9 @@ class Receiver:
     """
     signal, action = curr_game["signal"], curr_game["faction"]
     reward = curr_game["reward"]
-    self.action_weights[signal, action] += reward
+    self.action_weights[signal, action] += reward    
 
-    maxw = np.max(self.action_weights[signal])
-    minw = np.min(self.action_weights[signal])
-
-    # Setting the range of weights from -300 to 300
-    if maxw - minw > 600:
-      self.action_weights[signal] = (self.action_weights[signal] - minw) * 600 / (maxw - minw) + minw
-    elif maxw > 300:
-      self.action_weights[signal] -= maxw - 300
-    elif minw < -300:
-      self.action_weights[signal] += -300 - minw
-
+    # Reci stimgen currently discouraged. Removed from SG2 on 3/3/25.
     # l = r = action
     # for i in range(1,4):
     #   stimgen_reward = stimgen(i) * reward
@@ -227,7 +237,7 @@ class Receiver:
     for i in range(self.num_signals):
       print(f'{i:3}', end=' ')
       for j in range(self.total_actions):
-        print(f'{int(prob[i, j]):3}', end=' ')
+        print(f'{prob[i, j]:.2f}', end=' ')
       print()
 
 

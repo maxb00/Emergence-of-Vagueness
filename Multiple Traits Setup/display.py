@@ -212,7 +212,7 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
     stats_plot.axis("off")
     stats_plot.annotate(text,
             xy=(0, 0.05), xytext=(0, -40),
-            xycoords=('axes fraction', 'figure fraction'),
+            xycoords=("axes fraction", "figure fraction"), # type: ignore
             textcoords='offset points',
             size=34, ha='left', va='bottom')
 
@@ -228,7 +228,7 @@ def gen_gif(game, num_iter: int, record_interval: int, duration: int, output_fil
     os.mkdir("simulations")
   
   subfolder = f"{num_states}_{num_signals}_{num_states}"
-  if not os.path.exists(f"./simulations/v7/{subfolder}"):
+  if not os.path.exists(f"./simulations/v9_2025/{subfolder}"):
     os.makedirs(f"simulations/v7/{subfolder}/")
   
   version = 1

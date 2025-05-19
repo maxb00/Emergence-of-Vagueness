@@ -42,6 +42,7 @@ def normpdf(x: float, mean: float, std: float) -> float:
   num = math.exp(-(float(x)-float(mean))**2/(2*var))
   return num/denom
 
+# TODO: Check this for uniform + normal distrobutions.
 def gen_state_prob(num_traits: int, num_states: int):
   """Returns the probability matrix of the states of the game
 
@@ -89,7 +90,7 @@ class SignalingGame:
   """
   def __init__(self, num_traits: int, num_states: int, num_signals: int, 
                num_actions: int, reward_param: tuple[float, float],
-               null_signal=False):
+               null_signal=False, dist='uniform'):
     """Initalizes the instances to set up the game
 
     Args:
@@ -103,13 +104,15 @@ class SignalingGame:
     """
     self.num_traits = num_traits
     self.num_states = num_states
-    self.num_signals = num_signals
+    self.num_signals = num_signals + (1 if null_signal else 0)
     self.num_actions = num_actions
 
     self.total_states = self.num_states**self.num_traits
 
-    self.state_prob = gen_state_prob(num_traits, num_states)
-    # self.state_prob = np.full(27, 1/27, dtype=np.float64)
+    if dist == 'uniform':
+      self.state_prob = np.full(self.total_states, 1/self.total_states, dtype=np.float64)
+    else:
+      self.state_prob = gen_state_prob(num_traits, num_states)
 
     self.reward_param = reward_param
 
@@ -324,13 +327,13 @@ class SignalingGame:
     ep = 0
     for w in range(self.total_states):
       epw = 0
-      for m in range(self.num_signals + (1 if self.null_signal else 0)):
+      for m in range(self.num_signals):
         eps = 0
         for a in range(self.total_states):
           if not self.null_signal or m != self.num_signals:
             state = self.unnumerize(w)
             action = self.unnumerize(a)
-            eps += action_prob[m, a] * self.evaluate(state, action)
+            eps += action_prob[m, a] * self.evaluate(state, action) # type: ignore
 
         epw += signal_prob[m, w] * eps
 
@@ -385,7 +388,8 @@ class SignalingGame:
       inf_sig = 0
       inf_states.append([])
       for j in range(self.total_states):
-        inf_state = prob[i, j] * np.log(prob[i, j]/self.state_prob[j])
+        # I recognize this. matches ln 185
+        inf_state = prob[i, j] * np.log(prob[i, j] / self.state_prob[j])
         inf_sig += inf_state
         
         if weighted:
@@ -404,7 +408,7 @@ class SignalingGame:
     new_size.extend([self.num_states] * self.num_traits)
     inf_states = np.resize(np.array(inf_states), tuple(new_size))
 
-    return inf, inf_sigs, inf_states
+    return inf, inf_sigs, inf_states # type: ignore
   
 
   def info_measure_best_signal(self, signal_prob, weighted=True) -> float:
@@ -421,12 +425,12 @@ class SignalingGame:
     prob = (prob.T / np.sum(prob, axis=1)).T
 
     aggregate_info_measure = 0
-    info_by_signal = [] # I'm not really sure what this stores...
+    info_by_signal = np.zeros(self.num_signals) # I'm not really sure what this stores...
     info_by_state_by_signal = []
     for state in range(self.total_states):
       state_info_measure = []
       for signal in range(self.num_signals):
-        if self.null_signal and i == self.num_signals:
+        if self.null_signal and signal == self.num_signals-1:
           break
         if len(info_by_state_by_signal) <= signal:
           info_by_state_by_signal.append([])
@@ -445,7 +449,7 @@ class SignalingGame:
     new_size.extend([self.num_states] * self.num_traits)
     info_by_state_by_signal = np.resize(np.array(info_by_state_by_signal), tuple(new_size))
 
-    return aggregate_info_measure, info_by_signal, info_by_state_by_signal
+    return aggregate_info_measure, info_by_signal, info_by_state_by_signal # type: ignore
         
   
   # HARD_CODED FOR 2 TRAITS
@@ -491,21 +495,21 @@ class SignalingGame:
       inf_by_trait[0].append(inf_sig_t1)
       inf_by_trait[1].append(inf_sig_t2)
 
-    return inf_by_trait
+    return inf_by_trait # type: ignore
   
   def optimal_info(self, weighted=True) -> float:
     """Calculates the total information content for the optimal strategy"""
 
     opt_sig, _ = self.optimal_strat()
 
-    return self.info_measure(opt_sig, weighted)[0]
+    return self.info_measure(opt_sig, weighted)[0] # type: ignore
   
   def floor_info(self, weighted=True) -> float:
     """Calculates the total information content for the floor strategy"""
 
     floor_sig, _ = self.floor_strat()
 
-    return self.info_measure(floor_sig, weighted)[0]
+    return self.info_measure(floor_sig, weighted)[0] # type: ignore
 
   def gen_state(self) -> int:
     """Generates a random (world) state
@@ -515,7 +519,7 @@ class SignalingGame:
     """
     state = self.random.choice(self.total_states, p=self.state_prob)
 
-    return self.unnumerize(state)
+    return self.unnumerize(state) # type: ignore
   
   def update_history(self, reward: int):
     """Updates the history of simulations
@@ -572,8 +576,8 @@ class SignalingGame:
       self.curr_signal = signal
       self.curr_action = action
 
-      reward = self.evaluate(self.curr_state, self.curr_action)
-      self.update_history(reward)
+      reward = self.evaluate(self.curr_state, self.curr_action) # type: ignore
+      self.update_history(reward) # type: ignore
       self.sender.update(self.history[-1])
       self.receiver.update(self.history[-1])
 
@@ -592,8 +596,8 @@ class SignalingGame:
 
     """ TESTING: Info content by rows/columns in 2D/3D """
     payoff = self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1])
-    info, _, info_state = self.info_measure(self.sender.signal_history[-1], False)
-    w_info, _, w_info_state = self.info_measure(self.sender.signal_history[-1])
+    info, _, info_state = self.info_measure_best_signal(self.sender.signal_history[-1], False) # type: ignore
+    w_info, _, w_info_state = self.info_measure_best_signal(self.sender.signal_history[-1]) # type: ignore
 
     # info_by_state_t1 = [np.sum(info_state[:, :, i]) for i in range(self.num_states)]
     # info_by_state_t2 = [np.sum(info_state[:, i, :]) for i in range(self.num_states)]
@@ -611,7 +615,7 @@ class SignalingGame:
     # print(f"Weighted trait 2's low|medium|high: {w_info_by_state_t2[0]:.5f} | {w_info_by_state_t2[1]:.5f} | {w_info_by_state_t2[2]:.5f}")
     # print(f"Weighted trait 3's low|medium|high: {w_info_by_state_t3[0]:.5f} | {w_info_by_state_t3[1]:.5f} | {w_info_by_state_t3[2]:.5f}")
 
-    # gif_filename = f"./simulations/v7/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}" #HARD-CODED
+    # gif_filename = f"./simulations/v9_2025/{self.num_states}_{self.num_signals}_{self.num_actions}/{self.reward_param}{'_null' if self.null_signal else ''}_{num_iter}" #HARD-CODED
   
     # gen_gif(self, num_iter, record_interval, 100, gif_filename)
 
