@@ -7,7 +7,7 @@ def run():
   c = 1 # reward param 1
   d_lst = [0.3] # reward param 2
   i = 100_000 # number of rollouts per game
-  r = 25 # number of generations between image creation
+  r = 100 # number of generations between image creation
   repeats = 1
   
   for n in n_lst:

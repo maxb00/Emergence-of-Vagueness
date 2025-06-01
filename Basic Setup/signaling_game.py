@@ -172,10 +172,11 @@ class SignalingGame:
         return inf
     
 
-    def info_measure_best_sig(self, signal_prob) -> list[float]:
+    def info_measure_best_sig(self, signal_prob) -> tuple[list[float], list[int]]:
         prob = (signal_prob.T / np.sum(signal_prob, axis=1)).T
 
         aggregate_info_measure = []
+        aggregate_best_signals = []
         for state in range(self.num_states):
             state_info_measure = []
             for signal in range(self.num_signals):
@@ -184,8 +185,10 @@ class SignalingGame:
                 # Note: given uniform state prior, prob[signal, state] * self.num_states = prob[signal, state] / P(state)
                 signal_info_measure = prob[signal, state] * np.log(prob[signal, state] * self.num_states)
                 state_info_measure.append(signal_info_measure)
-            aggregate_info_measure.append(max(state_info_measure))
-        return aggregate_info_measure
+            best_signal = np.argmax(state_info_measure)
+            aggregate_info_measure.append(state_info_measure[best_signal])
+            aggregate_best_signals.append(best_signal)
+        return aggregate_info_measure, aggregate_best_signals
 
 
     def optimal_info(self) -> float:
@@ -224,7 +227,7 @@ class SignalingGame:
             "reward": reward
         })
 
-    def __call__(self, num_iter: int, record_interval=-1, repeat_num: int = None, make_gif: bool = True):
+    def __call__(self, num_iter: int, record_interval=-1, repeat_num=None, make_gif: bool = True):
         """Runs the simulation
 
         Args:

@@ -25,18 +25,20 @@ def gen_gif(signal_history: list, action_history: list, ep_fn, opt_payoff: float
   infoy = []
   opti_y = []
   state_info_y = []
+  best_signals_by_im = []
 
   for i in range(num_images):
-    fig, axs = plt.subplots(5, 1, figsize=(10, 8))
+    fig, axs = plt.subplots(6, 1, figsize=(10, 10), gridspec_kw={'height_ratios': [2, 2, 1, 1, 2, 2]})
     plt.tight_layout(pad=3)
 
-    step_info_measure = info_measure(signal_history[i])
+    step_info_measure, step_best_signals = info_measure(signal_history[i])
 
     ix.append((i+1)*record_interval)
     epy.append(ep_fn(signal_history[i], action_history[i]))
     optp_y.append(opt_payoff)
     infoy.append(sum(step_info_measure))
     state_info_y.append([step_info_measure])
+    best_signals_by_im.append([step_best_signals])
     opti_y.append(opt_info)
 
     sns.heatmap(signal_history[i], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, 
@@ -51,23 +53,27 @@ def gen_gif(signal_history: list, action_history: list, ep_fn, opt_payoff: float
     axs[1].set_ylabel("messages")
     axs[1].set_title("Receiver\'s weights")
 
-    sns.heatmap(step_info_measure, linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, fmt=".3f", ax=axs[2])
-    axs[2].set_title("state info measure")
-    axs[2].set_xlabel("states")
+    sns.heatmap(state_info_y[i], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, fmt=".3f", ax=axs[2])
+    axs[2].set_title("State info measure")
+    axs[2].set_xlabel("States")
 
-    axs[3].plot(ix, epy, label="expected")
-    axs[3].plot(ix, optp_y, label="optimal")
-    axs[3].legend(loc="upper left")
-    axs[3].set_xlabel("rollout")
-    axs[3].set_ylabel("expected payoff")
-    axs[3].set_title("Expected payoff by rollout")
+    sns.heatmap(best_signals_by_im[i], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, ax=axs[3])
+    axs[3].set_title("Best signal by IM")
+    axs[3].set_xlabel("States")
 
-    axs[4].plot(ix, infoy, label="current")
-    axs[4].plot(ix, opti_y, label="optimal")
+    axs[4].plot(ix, epy, label="expected")
+    axs[4].plot(ix, optp_y, label="optimal")
     axs[4].legend(loc="upper left")
     axs[4].set_xlabel("rollout")
-    axs[4].set_ylabel("info measure")
-    axs[4].set_title("Info measure by rollout")
+    axs[4].set_ylabel("expected payoff")
+    axs[4].set_title("Expected payoff by rollout")
+
+    axs[5].plot(ix, infoy, label="current")
+    axs[5].plot(ix, opti_y, label="optimal")
+    axs[5].legend(loc="upper left")
+    axs[5].set_xlabel("rollout")
+    axs[5].set_ylabel("info measure")
+    axs[5].set_title("Info measure by rollout")
 
     fig.suptitle(f"Rollout {(i+1)*record_interval}")
     plt.savefig(f"./images/game_{(i+1)*record_interval}.png")
@@ -98,19 +104,21 @@ def gen_single_heatmap(signal_history: list, action_history: list, ep_fn, opt_pa
   infoy = []
   opti_y = []
   state_info_y = []
+  best_signals_by_im = []
   
-  fig, axs = plt.subplots(5, 1, figsize=(10,8))
+  fig, axs = plt.subplots(6, 1, figsize=(10,10), gridspec_kw={'height_ratios': [2, 2, 1, 1, 2, 2]})
   plt.tight_layout(pad=3)
 
 
   # get info measure stuff
   for i in range(num_iter // record_interval):
-    step_info_measure = info_measure(signal_history[i])
+    step_info_measure, step_best_signals = info_measure(signal_history[i])
     ix.append((i+1)*record_interval)
     epy.append(ep_fn(signal_history[i], action_history[i]))
     optp_y.append(opt_payoff)
     infoy.append(sum(step_info_measure))
     state_info_y.append([step_info_measure])
+    best_signals_by_im.append([step_best_signals])
     opti_y.append(opt_info)
 
 
@@ -129,24 +137,28 @@ def gen_single_heatmap(signal_history: list, action_history: list, ep_fn, opt_pa
   axs[1].set_title("Receiver\'s weights")
 
   sns.heatmap(state_info_y[-1], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, fmt=".3f", ax=axs[2])
-  axs[2].set_title("state info measure")
-  axs[2].set_xlabel("states")
+  axs[2].set_title("State info measure")
+  axs[2].set_xlabel("States")
 
-  axs[3].plot(ix, epy, label="expected")
-  axs[3].plot(ix, optp_y, label="optimal")
-  axs[3].legend(loc="upper left")
-  axs[3].set_xlabel("rollout")
-  axs[3].set_ylabel("expected payoff")
-  axs[3].set_title("Expected payoff by rollout")
+  sns.heatmap(best_signals_by_im[-1], linewidths=0.5, linecolor="white", square=True, cbar=False, annot=True, ax=axs[3])
+  axs[3].set_title("Best signal by IM")
+  axs[3].set_xlabel("States")
 
-  axs[4].plot(ix, infoy, label="current")
-  axs[4].plot(ix, opti_y, label="optimal")
+  axs[4].plot(ix, epy, label="expected")
+  axs[4].plot(ix, optp_y, label="optimal")
   axs[4].legend(loc="upper left")
   axs[4].set_xlabel("rollout")
-  axs[4].set_ylabel("info measure")
-  axs[4].set_title("Info measure by rollout")
+  axs[4].set_ylabel("expected payoff")
+  axs[4].set_title("Expected payoff by rollout")
 
-  fig.suptitle(f"Final Strategy")
+  axs[5].plot(ix, infoy, label="current")
+  axs[5].plot(ix, opti_y, label="optimal")
+  axs[5].legend(loc="upper left")
+  axs[5].set_xlabel("rollout")
+  axs[5].set_ylabel("info measure")
+  axs[5].set_title("Info measure by rollout")
+
+  # fig.suptitle(f"Final Strategy")
   plt.savefig(output_file)
   plt.close(fig)
 
