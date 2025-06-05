@@ -26,6 +26,27 @@ def linear_reward_fn(param: tuple[float, float], null_signal=False):
     return get_reward
 
 
+def normpdf(index: int, mean: float, standard_deviation: float) -> float:
+    # Copied from Quan's implementation in \Multiple Traits Setup\
+    squared_deviation = float(standard_deviation) ** 2
+    num = np.exp( -(float(index)-float(mean))**2 / (2 * squared_deviation))
+    den = (2 * np.pi * squared_deviation) ** 0.5
+    return num/den
+
+
+def normal_state_priors(num_states: int) -> np.ndarray:
+    # calculates state priors for a normal distrobution.
+    mean = (num_states-1) / 2
+    std_deviation = mean / 1.25
+
+    state_probabilities = np.zeros((num_states,), dtype=np.float64)
+    for i in range(num_states):
+        state_probabilities[i] = normpdf(i, mean, std_deviation) # matlab name
+    
+    state_probabilities /= np.sum(state_probabilities)
+    return state_probabilities
+
+
 class SignalingGame:
     """A signaling game between a sender and a receiver
 
@@ -49,7 +70,7 @@ class SignalingGame:
         history (list): list of dicts (state, signal, action, reward) per round
     """
     def __init__(self, num_states: int, num_signals: int, num_actions: int,
-                 reward_param: tuple[float, float], null_signal=False):
+                 reward_param: tuple[float, float], null_signal=False, dist="uniform"):
         """Initializes the game
 
         Args:
@@ -68,6 +89,13 @@ class SignalingGame:
 
         self.null_signal = null_signal
         self.random = np.random.default_rng()
+
+        if dist == "uniform":
+            self.state_prob = np.full(self.num_states, 1/self.num_states, dtype=np.float64)
+        elif dist == "normal":
+            self.state_prob = normal_state_priors(num_states)
+        else:
+            raise Exception("Only implemented normal and uniform")
 
         # By default, using plain Sender and Receiver
         # (Alternatively, you can enable the scikit-learn versions)
@@ -173,7 +201,13 @@ class SignalingGame:
     
 
     def info_measure_best_sig(self, signal_prob) -> tuple[list[float], list[int]]:
-        prob = (signal_prob.T / np.sum(signal_prob, axis=1)).T
+        # accomodate varied priors
+        prob = np.zeros_like(signal_prob)
+        for signal in range(self.num_signals):
+            for state in range(self.num_states):
+                prob[signal, state] = signal_prob[signal, state] * self.state_prob[state]
+        
+        prob = (prob.T / np.sum(prob, axis=1)).T
 
         aggregate_info_measure = []
         aggregate_best_signals = []
@@ -212,7 +246,7 @@ class SignalingGame:
         Returns:
             int: a new current state
         """
-        return self.random.integers(self.num_states)
+        return self.random.choice(self.num_states, p=self.state_prob)
 
     def update_history(self, reward: float):
         """Updates the history of simulations
