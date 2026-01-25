@@ -233,7 +233,7 @@ class Player:
 
     def graph_preds(self, filename=None):
         assert self.given_examples is not None
-
+        # generates figure 7
         predictions = self.get_predictions()
         givens = [state for state, _ in self.given_examples]
         colors = [signal for _, signal in self.given_examples]
@@ -241,12 +241,17 @@ class Player:
         # create legend
         labels = [f"Signal {i+1}" for i in range(self.signals)]
         labels.append("Threshold")
+        linestyles = ["--", ":", "-."]
+        markers = ["^", "v", "*", "d", '+']
+        colors = colormaps["Set1"].colors
+
 
         plt.figure(figsize=(7,5))
         for sig in range(self.signals):
-            plt.plot(range(1, self.states+1), predictions[:, sig], label=labels[sig])
-        plt.plot(range(1, self.states+1), [self.threshold] * self.states, label=labels[-1], linestyle='--')
-        plt.scatter(givens, givens_y, marker="|", cmap="Set1", c=colors)
+            plt.plot(range(1, self.states+1), predictions[:, sig], label=labels[sig], linestyle=linestyles[sig%3])
+        plt.plot(range(1, self.states+1), [self.threshold] * self.states, label=labels[-1], linestyle='-', color="black")
+        for i, (st, sg) in enumerate(self.given_examples):
+            plt.scatter(st, givens_y[i], marker=markers[sg-1], color=colors[sg-1])
         plt.xlim(1, self.states)
         plt.ylim(0, 1)
         plt.xlabel("State")
@@ -522,19 +527,23 @@ class SKLearnPlayer(Player):
             predictions[state] = preds
 
         givens = [state for state, _ in self.given_examples]
-        colors = [signal for _, signal in self.given_examples]
         givens_y = [0.2] * len(givens)
         
 
         # create legend
         labels = [f"Signal {i+1}" for i in range(self.signals)]
         labels.append("Threshold")
+        linestyles = ["--", ":", "-."]
+        markers = ["^", "v", "*", "d", '+']
+        colors = colormaps["Set1"].colors
+
 
         plt.figure(figsize=(7,5))
         for sig in range(self.signals):
-            plt.plot(range(1, self.states+1), predictions[:, sig], label=labels[sig])
-        plt.plot(range(1, self.states+1), [self.threshold] * self.states, label=labels[-1], linestyle='--')
-        plt.scatter(givens, givens_y, marker="|", cmap="Set1", c=colors)
+            plt.plot(range(1, self.states+1), predictions[:, sig], label=labels[sig], linestyle=linestyles[sig%3])
+        plt.plot(range(1, self.states+1), [self.threshold] * self.states, label=labels[-1], linestyle='-', color="black")
+        for i, (st, sg) in enumerate(self.given_examples):
+            plt.scatter(st, givens_y[i], marker=markers[sg-1], color=colors[sg-1])
         plt.xlim(1, self.states)
         plt.ylim(0, 1)
         plt.xlabel("State")

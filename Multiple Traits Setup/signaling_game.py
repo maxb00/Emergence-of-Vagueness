@@ -411,7 +411,7 @@ class SignalingGame:
     return inf, inf_sigs, inf_states # type: ignore
   
 
-  def info_measure_best_signal(self, signal_prob, weighted=True) -> float:
+  def info_measure_best_signal(self, signal_prob, weighted=True):
     signal_prob = signal_prob.reshape(self.num_signals, self.total_states)
 
     prob = np.zeros_like(signal_prob)
@@ -427,8 +427,10 @@ class SignalingGame:
     aggregate_info_measure = 0
     info_by_signal = np.zeros(self.num_signals) # I'm not really sure what this stores...
     info_by_state_by_signal = []
+    best_signal_by_state = []
     for state in range(self.total_states):
       state_info_measure = []
+      best_signal_by_state.append([])
       for signal in range(self.num_signals):
         if self.null_signal and signal == self.num_signals-1:
           break
@@ -440,7 +442,9 @@ class SignalingGame:
           signal_info_measure *= prob_sig[signal]
         state_info_measure.append(signal_info_measure)
         info_by_state_by_signal[signal].append(signal_info_measure)
+      best_signal = np.argmax(state_info_measure)
       aggregate_info_measure += max(state_info_measure)
+      best_signal_by_state[state].append(best_signal)
     if weighted:
       for i in range(len(info_by_signal)):
         info_by_signal[i] *= prob_sig[signal]
@@ -448,8 +452,9 @@ class SignalingGame:
     new_size = [self.num_signals]
     new_size.extend([self.num_states] * self.num_traits)
     info_by_state_by_signal = np.resize(np.array(info_by_state_by_signal), tuple(new_size))
+    best_signal_by_state = np.resize(np.array(best_signal_by_state), tuple(new_size))
 
-    return aggregate_info_measure, info_by_signal, info_by_state_by_signal # type: ignore
+    return aggregate_info_measure, info_by_signal, info_by_state_by_signal, best_signal_by_state # type: ignore
         
   
   # HARD_CODED FOR 2 TRAITS
@@ -596,8 +601,8 @@ class SignalingGame:
 
     """ TESTING: Info content by rows/columns in 2D/3D """
     payoff = self.expected_payoff(self.sender.signal_history[-1], self.receiver.action_history[-1])
-    info, _, info_state = self.info_measure_best_signal(self.sender.signal_history[-1], False) # type: ignore
-    w_info, _, w_info_state = self.info_measure_best_signal(self.sender.signal_history[-1]) # type: ignore
+    info, _, info_state, best_sigs = self.info_measure_best_signal(self.sender.signal_history[-1], False) # type: ignore
+    w_info, _, w_info_state, w_best_sigs = self.info_measure_best_signal(self.sender.signal_history[-1]) # type: ignore
 
     # info_by_state_t1 = [np.sum(info_state[:, :, i]) for i in range(self.num_states)]
     # info_by_state_t2 = [np.sum(info_state[:, i, :]) for i in range(self.num_states)]
@@ -623,6 +628,6 @@ class SignalingGame:
 
     # return (info_by_state_t1, info_by_state_t2, info_by_state_t3, w_info_by_state_t1, w_info_by_state_t2, w_info_by_state_t3)
 
-    return (payoff, info, info_state, w_info, w_info_state)
+    return (payoff, info, info_state, w_info, w_info_state, best_sigs, w_best_sigs)
   
   

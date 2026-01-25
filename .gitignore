@@ -3,3 +3,4 @@
 Test*Setup/
 gurobi/license.toml
 *.DS_Store
+.vscode/settings.json
